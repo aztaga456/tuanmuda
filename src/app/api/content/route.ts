@@ -2,35 +2,54 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { defaultSiteContent, SiteContent } from "@/data/defaultSiteContent";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
+  const headers = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+    "Pragma": "no-cache",
+  };
+
   try {
-    if (process.env.DATABASE_URL) {
+    if (process.env.DATABASE_URL && prisma) {
       const record = await prisma.siteContent.findUnique({
         where: { key: "main" },
       });
 
       if (record && record.data) {
-        return NextResponse.json({
-          success: true,
-          source: "database",
-          data: record.data,
-        });
+        return NextResponse.json(
+          {
+            success: true,
+            source: "database",
+            version: record.version,
+            updatedAt: record.updatedAt,
+            data: record.data,
+          },
+          { headers }
+        );
       }
     }
 
-    // Fallback ke default site content jika DB belum terkonfigurasi
-    return NextResponse.json({
-      success: true,
-      source: "fallback",
-      data: defaultSiteContent,
-    });
+    // Fallback ke default site content jika DB belum terkonfigurasi atau data kosong
+    return NextResponse.json(
+      {
+        success: true,
+        source: "fallback",
+        data: defaultSiteContent,
+      },
+      { headers }
+    );
   } catch (err: any) {
     console.warn("Content GET from database fallback to default:", err.message);
-    return NextResponse.json({
-      success: true,
-      source: "fallback_error",
-      data: defaultSiteContent,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        source: "fallback_error",
+        data: defaultSiteContent,
+      },
+      { headers }
+    );
   }
 }
 

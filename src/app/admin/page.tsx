@@ -30,6 +30,7 @@ export default function AdminPage() {
     exportContent,
     importContent,
     syncWithDatabase,
+    reloadFromDatabase,
   } = useContent();
 
   // Authentication State
@@ -53,6 +54,7 @@ export default function AdminPage() {
   // Sync, Backup & Upload States
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isBackingUp, setIsBackingUp] = useState<boolean>(false);
+  const [isReloading, setIsReloading] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [hasUnsyncedChanges, setHasUnsyncedChanges] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
@@ -74,13 +76,14 @@ export default function AdminPage() {
     }, 3500);
   };
 
-  // Check existing session
+  // Check existing session & sync from cloud
   useEffect(() => {
     const session = sessionStorage.getItem("tuanmuda_admin_session");
     if (session === "authenticated") {
       setIsAuthenticated(true);
+      reloadFromDatabase();
     }
-  }, []);
+  }, [reloadFromDatabase]);
 
   const [newPasswordInput, setNewPasswordInput] = useState("");
 
@@ -95,9 +98,23 @@ export default function AdminPage() {
       sessionStorage.setItem("tuanmuda_admin_session", "authenticated");
       setIsAuthenticated(true);
       setAuthError("");
+      reloadFromDatabase();
       showToast("Selamat datang di Panel Admin TUANMUDA!");
     } else {
       setAuthError("Password salah. Silakan coba lagi.");
+    }
+  };
+
+  const handleReload = async () => {
+    setIsReloading(true);
+    showToast("Mengambil data terbaru dari Neon Database...");
+    const ok = await reloadFromDatabase();
+    setIsReloading(false);
+    if (ok) {
+      setHasUnsyncedChanges(false);
+      showToast("✅ Berhasil memuat data terbaru dari cloud database!");
+    } else {
+      showToast("⚠️ Gagal memuat data dari database (cek koneksi).");
     }
   };
 
@@ -301,12 +318,27 @@ export default function AdminPage() {
             </div>
             <div className="text-[10px] sm:text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="truncate">Auto-Save Aktif</span>
+              <span className="truncate">Tersambung Cloud Neon DB</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Tombol Tarik Data Cloud dari Database */}
+          <button
+            type="button"
+            onClick={handleReload}
+            disabled={isReloading}
+            className={`px-2 sm:px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-xs font-semibold text-sky-300 hover:text-sky-200 border border-sky-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
+              isReloading ? "opacity-75 cursor-wait" : ""
+            }`}
+            title="Tarik data terbaru dari Neon Database (jika baru saja diedit dari HP atau perangkat lain)"
+          >
+            <span className={isReloading ? "animate-spin" : ""}>🔄</span>
+            <span className="hidden sm:inline">{isReloading ? "Memuat..." : "Tarik Data Cloud"}</span>
+            <span className="sm:hidden">Tarik</span>
+          </button>
+
           <Link
             href="/"
             target="_blank"
@@ -4116,6 +4148,27 @@ export default function AdminPage() {
           )}
         </main>
       </div>
+
+      {/* Floating Notification Bar jika ada perubahan belum disinkronkan ke Database */}
+      {hasUnsyncedChanges && (
+        <aside aria-label="Notifikasi Sinkronisasi" className="fixed bottom-4 inset-x-3 sm:inset-x-auto sm:right-6 z-50 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-amber-300/40 backdrop-blur-md max-w-lg">
+          <span className="text-xl shrink-0 animate-pulse">⚡</span>
+          <div className="text-xs min-w-0">
+            <p className="font-bold text-white leading-tight">Perubahan Belum Disimpan ke Database!</p>
+            <p className="text-[11px] text-amber-100 opacity-90 leading-tight mt-0.5">
+              Klik simpan agar perubahan langsung aktif di HP & semua pengunjung.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={isSyncing}
+            className="ml-auto px-3.5 py-1.5 bg-white text-orange-900 hover:bg-orange-50 font-bold rounded-xl text-xs shrink-0 cursor-pointer shadow-md transition-all active:scale-95"
+          >
+            {isSyncing ? "Menyimpan..." : "Simpan Sekarang"}
+          </button>
+        </aside>
+      )}
 
       <style jsx>{`
         .admin-input {

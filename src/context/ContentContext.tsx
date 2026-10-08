@@ -1,7 +1,95 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { SiteContent, defaultSiteContent } from "@/data/defaultSiteContent";
+
+export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined): SiteContent {
+  if (!parsed || typeof parsed !== "object") return defaultSiteContent;
+
+  return {
+    ...defaultSiteContent,
+    ...parsed,
+    brand: { ...defaultSiteContent.brand, ...(parsed.brand || {}) },
+    hero: {
+      ...defaultSiteContent.hero,
+      ...(parsed.hero || {}),
+      rotatingServices: parsed.hero?.rotatingServices?.length
+        ? parsed.hero.rotatingServices
+        : defaultSiteContent.hero.rotatingServices,
+      metrics: parsed.hero?.metrics?.length
+        ? parsed.hero.metrics
+        : defaultSiteContent.hero.metrics,
+    },
+    servicesBar: {
+      ...defaultSiteContent.servicesBar,
+      ...(parsed.servicesBar || {}),
+      items: parsed.servicesBar?.items?.length
+        ? parsed.servicesBar.items
+        : defaultSiteContent.servicesBar.items,
+    },
+    whyUs: {
+      ...defaultSiteContent.whyUs,
+      ...(parsed.whyUs || {}),
+      differentiators: parsed.whyUs?.differentiators?.length
+        ? parsed.whyUs.differentiators
+        : defaultSiteContent.whyUs.differentiators,
+    },
+    pricing: {
+      ...defaultSiteContent.pricing,
+      ...(parsed.pricing || {}),
+      websitePlans: parsed.pricing?.websitePlans?.length
+        ? parsed.pricing.websitePlans
+        : defaultSiteContent.pricing.websitePlans,
+      sosmedPlans: parsed.pricing?.sosmedPlans?.length
+        ? parsed.pricing.sosmedPlans
+        : defaultSiteContent.pricing.sosmedPlans,
+      videoAdsPlans: parsed.pricing?.videoAdsPlans?.length
+        ? parsed.pricing.videoAdsPlans
+        : defaultSiteContent.pricing.videoAdsPlans,
+      metaAdsPlans: parsed.pricing?.metaAdsPlans?.length
+        ? parsed.pricing.metaAdsPlans
+        : defaultSiteContent.pricing.metaAdsPlans,
+      seoPlans: parsed.pricing?.seoPlans?.length
+        ? parsed.pricing.seoPlans
+        : defaultSiteContent.pricing.seoPlans,
+    },
+    extensions: {
+      ...defaultSiteContent.extensions,
+      ...(parsed.extensions || {}),
+      items: parsed.extensions?.items?.length
+        ? parsed.extensions.items
+        : defaultSiteContent.extensions.items,
+    },
+    portfolio: {
+      ...defaultSiteContent.portfolio,
+      ...(parsed.portfolio || {}),
+      items: parsed.portfolio?.items?.length
+        ? parsed.portfolio.items
+        : defaultSiteContent.portfolio.items,
+    },
+    workflow: {
+      ...defaultSiteContent.workflow,
+      ...(parsed.workflow || {}),
+      steps: parsed.workflow?.steps?.length
+        ? parsed.workflow.steps
+        : defaultSiteContent.workflow.steps,
+    },
+    testimonials: {
+      ...defaultSiteContent.testimonials,
+      ...(parsed.testimonials || {}),
+      items: parsed.testimonials?.items?.length
+        ? parsed.testimonials.items
+        : defaultSiteContent.testimonials.items,
+    },
+    socialProof: {
+      ...defaultSiteContent.socialProof,
+      ...(parsed.socialProof || {}),
+      items: parsed.socialProof?.items?.length
+        ? parsed.socialProof.items
+        : defaultSiteContent.socialProof.items,
+    },
+  };
+}
 
 interface ContentContextType {
   content: SiteContent;
@@ -10,7 +98,11 @@ interface ContentContextType {
   resetContent: () => void;
   exportContent: () => string;
   importContent: (jsonStr: string) => boolean;
-  syncWithDatabase: (replacedUrls?: string[]) => Promise<{ success: boolean; message: string; deletedFiles?: string[] }>;
+  syncWithDatabase: (
+    replacedUrls?: string[],
+    overrideContent?: SiteContent
+  ) => Promise<{ success: boolean; message: string; deletedFiles?: string[] }>;
+  reloadFromDatabase: () => Promise<boolean>;
 }
 
 const STORAGE_KEY = "tuanmuda_cms_content";
@@ -23,119 +115,12 @@ const ContentContext = createContext<ContentContextType>({
   exportContent: () => "",
   importContent: () => false,
   syncWithDatabase: async () => ({ success: false, message: "" }),
+  reloadFromDatabase: async () => false,
 });
 
 export function ContentProvider({ children }: { children: React.ReactNode }) {
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
   const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load from localStorage on client mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // Deep merge with defaultSiteContent to ensure newly added keys are preserved
-        setContent((prev) => ({
-          ...defaultSiteContent,
-          ...parsed,
-          brand: { ...defaultSiteContent.brand, ...(parsed.brand || {}) },
-          hero: {
-            ...defaultSiteContent.hero,
-            ...(parsed.hero || {}),
-            rotatingServices: parsed.hero?.rotatingServices?.length
-              ? parsed.hero.rotatingServices
-              : defaultSiteContent.hero.rotatingServices,
-          },
-          servicesBar: {
-            ...defaultSiteContent.servicesBar,
-            ...(parsed.servicesBar || {}),
-            items: parsed.servicesBar?.items?.length
-              ? parsed.servicesBar.items
-              : defaultSiteContent.servicesBar.items,
-          },
-          whyUs: {
-            ...defaultSiteContent.whyUs,
-            ...(parsed.whyUs || {}),
-            differentiators: parsed.whyUs?.differentiators?.length
-              ? parsed.whyUs.differentiators
-              : defaultSiteContent.whyUs.differentiators,
-          },
-          pricing: {
-            ...defaultSiteContent.pricing,
-            ...(parsed.pricing || {}),
-            websitePlans: parsed.pricing?.websitePlans?.length
-              ? parsed.pricing.websitePlans
-              : defaultSiteContent.pricing.websitePlans,
-            sosmedPlans: parsed.pricing?.sosmedPlans?.length
-              ? parsed.pricing.sosmedPlans
-              : defaultSiteContent.pricing.sosmedPlans,
-            videoAdsPlans: parsed.pricing?.videoAdsPlans?.length
-              ? parsed.pricing.videoAdsPlans
-              : defaultSiteContent.pricing.videoAdsPlans,
-            metaAdsPlans: parsed.pricing?.metaAdsPlans?.length
-              ? parsed.pricing.metaAdsPlans
-              : defaultSiteContent.pricing.metaAdsPlans,
-            seoPlans: parsed.pricing?.seoPlans?.length
-              ? parsed.pricing.seoPlans
-              : defaultSiteContent.pricing.seoPlans,
-          },
-          extensions: {
-            ...defaultSiteContent.extensions,
-            ...(parsed.extensions || {}),
-            items: parsed.extensions?.items?.length
-              ? parsed.extensions.items
-              : defaultSiteContent.extensions.items,
-          },
-          portfolio: {
-            ...defaultSiteContent.portfolio,
-            ...(parsed.portfolio || {}),
-            items: parsed.portfolio?.items?.length
-              ? parsed.portfolio.items
-              : defaultSiteContent.portfolio.items,
-          },
-          workflow: {
-            ...defaultSiteContent.workflow,
-            ...(parsed.workflow || {}),
-            steps: parsed.workflow?.steps?.length
-              ? parsed.workflow.steps
-              : defaultSiteContent.workflow.steps,
-          },
-          testimonials: {
-            ...defaultSiteContent.testimonials,
-            ...(parsed.testimonials || {}),
-            items: parsed.testimonials?.items?.length
-              ? parsed.testimonials.items
-              : defaultSiteContent.testimonials.items,
-          },
-          socialProof: {
-            ...defaultSiteContent.socialProof,
-            ...(parsed.socialProof || {}),
-            items: parsed.socialProof?.items?.length
-              ? parsed.socialProof.items
-              : defaultSiteContent.socialProof.items,
-          },
-        }));
-      }
-    } catch (e) {
-      console.error("Failed to load CMS content from localStorage:", e);
-    } finally {
-      setIsLoaded(true);
-    }
-
-    // Sync across tabs
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
-        try {
-          setContent(JSON.parse(e.newValue));
-        } catch (err) {
-          console.error("Storage sync parse error:", err);
-        }
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
 
   const saveToStorage = (updated: SiteContent) => {
     try {
@@ -144,6 +129,96 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
       console.error("Failed to save CMS content to localStorage:", e);
     }
   };
+
+  // Fungsi reload data terbaru langsung dari Neon Database
+  const reloadFromDatabase = useCallback(async (): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/content", {
+        cache: "no-store",
+        headers: {
+          "Pragma": "no-cache",
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          const merged = mergeWithDefault(json.data);
+          setContent(merged);
+          saveToStorage(merged);
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not reload content from database:", err);
+    }
+    return false;
+  }, []);
+
+  // Inisialisasi saat client mount
+  useEffect(() => {
+    let isMounted = true;
+
+    // 1. Tampilkan cache lokal terlebih dahulu agar UX instan tanpa kedip
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setContent(mergeWithDefault(parsed));
+      }
+    } catch (e) {
+      console.error("Failed to load CMS content from localStorage:", e);
+    } finally {
+      setIsLoaded(true);
+    }
+
+    // 2. SELALU ambil data terbaru dari Neon PostgreSQL di server
+    // Ini menjamin sinkronisasi real-time antar perangkat (HP, Laptop, PC, Publik)
+    const initFetch = async () => {
+      try {
+        const res = await fetch("/api/content", {
+          cache: "no-store",
+          headers: {
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+          },
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data && isMounted) {
+            const merged = mergeWithDefault(json.data);
+            setContent(merged);
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.warn("Server content fetch notice (using cache/default):", err);
+      }
+    };
+
+    initFetch();
+
+    // 3. Sinkronisasi antar tab dalam browser yang sama
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          setContent(mergeWithDefault(JSON.parse(e.newValue)));
+        } catch (err) {
+          console.error("Storage sync parse error:", err);
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   const updateContent = (
     newContent: Partial<SiteContent> | ((prev: SiteContent) => SiteContent)
@@ -175,10 +250,7 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
     try {
       const parsed = JSON.parse(jsonStr);
       if (parsed && typeof parsed === "object" && parsed.brand) {
-        const fullContent: SiteContent = {
-          ...defaultSiteContent,
-          ...parsed,
-        };
+        const fullContent = mergeWithDefault(parsed);
         setContent(fullContent);
         saveToStorage(fullContent);
         return true;
@@ -191,17 +263,19 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
   };
 
   const syncWithDatabase = async (
-    replacedUrls?: string[]
+    replacedUrls?: string[],
+    overrideContent?: SiteContent
   ): Promise<{ success: boolean; message: string; deletedFiles?: string[] }> => {
+    const targetContent = overrideContent || content;
     try {
       const res = await fetch("/api/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, replacedUrls }),
+        body: JSON.stringify({ content: targetContent, replacedUrls }),
       });
       const data = await res.json();
       if (data.success) {
-        saveToStorage(content);
+        saveToStorage(targetContent);
         return {
           success: true,
           message: data.message || "Konten berhasil disinkronkan ke database!",
@@ -224,6 +298,7 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
         exportContent,
         importContent,
         syncWithDatabase,
+        reloadFromDatabase,
       }}
     >
       {children}
