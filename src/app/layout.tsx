@@ -1,27 +1,7 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter, Caveat } from "next/font/google";
 import "./globals.css";
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
-
-const caveat = Caveat({
-  variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  display: "swap",
-});
+import { ContentProvider } from "@/context/ContentContext";
+import { getInitialSiteContent } from "@/lib/get-initial-content";
 
 export const metadata: Metadata = {
   title: "TUANMUDA — Creative Agency & Digital Growth Studio | Selong, Lombok Timur",
@@ -50,9 +30,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { ContentProvider } from "@/context/ContentContext";
-import { getInitialSiteContent } from "@/lib/get-initial-content";
-
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({
@@ -63,7 +40,15 @@ export default async function RootLayout({
   const initialContent = await getInitialSiteContent();
 
   return (
-    <html lang="id" className={`${plusJakartaSans.variable} ${inter.variable} ${caveat.variable} scroll-smooth`}>
+    <html lang="id" className="scroll-smooth">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen bg-[#F8FAFF] text-slate-900 font-sans antialiased selection:bg-purple-500 selection:text-white">
         <ContentProvider initialContent={initialContent}>{children}</ContentProvider>
       </body>
