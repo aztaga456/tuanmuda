@@ -11,14 +11,78 @@ export interface StoredFile {
 }
 
 /**
- * Menyimpan buffer file ke storage lokal (public/uploads)
- * atau ke Cloudflare R2 / S3 jika environment S3 diaktifkan.
+ * Mengunggah file gambar ke ImgBB API
+ * Upload sangat cepat (< 500ms), direct Cloudflare CDN URL (i.ibb.co),
+ * tanpa masalah CORS, Referer, atau kuota seperti Google Drive.
+ */
+export async function uploadToImgBB(
+  fileBuffer: Buffer,
+  originalFilename: string,
+  mimeType: string
+): Promise<StoredFile> {
+  const apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) {
+    throw new Error("IMGBB_API_KEY belum dikonfigurasi di environment variables (.env)");
+  }
+
+  const base64Image = fileBuffer.toString("base64");
+  const cleanExt = path.extname(originalFilename).toLowerCase() || ".png";
+  const baseName = path
+    .basename(originalFilename, cleanExt)
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "-")
+    .slice(0, 40);
+
+  const formData = new FormData();
+  formData.append("image", base64Image);
+  formData.append("name", baseName);
+
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const json = await res.json();
+  if (!json.success || !json.data?.url) {
+    const errorMsg = json.error?.message || "Gagal mengunggah gambar ke ImgBB";
+    throw new Error(errorMsg);
+  }
+
+  const directUrl = json.data.url;
+  const fileId = json.data.id || baseName;
+
+  return {
+    filename: json.data.image?.filename || `${baseName}${cleanExt}`,
+    originalName: originalFilename,
+    url: directUrl,
+    path: `imgbb://${fileId}`,
+    size: json.data.size || fileBuffer.length,
+    mimeType: json.data.image?.mime || mimeType,
+  };
+}
+
+/**
+ * Menyimpan buffer file ke storage ImgBB (prioritas),
+ * Cloudflare R2 / S3, Google Drive, atau storage lokal.
  */
 export async function saveUploadedFile(
   fileBuffer: Buffer,
   originalFilename: string,
   mimeType: string
 ): Promise<StoredFile> {
+  // 1. Mode ImgBB (Prioritas Utama untuk realtime & performa instan)
+  const isImgBB =
+    Boolean(process.env.IMGBB_API_KEY) ||
+    process.env.STORAGE_DRIVER === "imgbb";
+
+  if (isImgBB && process.env.IMGBB_API_KEY) {
+    try {
+      return await uploadToImgBB(fileBuffer, originalFilename, mimeType);
+    } catch (imgbbError: any) {
+      console.warn("[Storage] ImgBB upload notice, mencoba fallback ke GDrive / Local:", imgbbError.message);
+    }
+  }
+
   const isCloudStorage = process.env.STORAGE_DRIVER === "s3" && process.env.STORAGE_S3_BUCKET;
 
   // Bersihkan nama file agar aman untuk URL & OS
@@ -392,6 +456,8 @@ export function extractMediaUrlsFromContent(obj: any): string[] {
       if (
         item.includes("googleusercontent.com/d/") ||
         item.includes("drive.google.com") ||
+        item.includes("i.ibb.co") ||
+        item.includes("ibb.co") ||
         item.startsWith("/uploads/") ||
         item.startsWith("s3://") ||
         item.includes(".r2.dev/") ||

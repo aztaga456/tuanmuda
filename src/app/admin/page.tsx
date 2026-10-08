@@ -138,7 +138,7 @@ export default function AdminPage() {
     }
 
     setIsUploading(true);
-    showToast("Mengunggah gambar ke Google Drive Storage...");
+    showToast("Mengunggah gambar ke Cloud Storage...");
 
     try {
       const formData = new FormData();
@@ -164,7 +164,7 @@ export default function AdminPage() {
           setReplacedUrls((prev) => Array.from(new Set([...prev, oldUrl])));
         }
 
-        showToast("✅ Gambar berhasil diunggah ke Google Drive!");
+        showToast("✅ Gambar berhasil diunggah!");
       } else {
         alert("Gagal mengunggah file: " + (data.error || "Cek koneksi internet"));
       }
@@ -177,10 +177,10 @@ export default function AdminPage() {
     }
   };
 
-  // Simpan & Sinkronkan langsung ke Neon Database dan bersihkan gambar usang di storage
+  // Simpan & Sinkronkan langsung ke Cloud Database dan bersihkan gambar usang di storage
   const handleSync = async () => {
     setIsSyncing(true);
-    showToast("Menyimpan ke Neon PostgreSQL & membersihkan storage...");
+    showToast("Menyimpan ke Database & menyinkronkan data...");
 
     try {
       const res = await syncWithDatabase(replacedUrls);
@@ -318,7 +318,7 @@ export default function AdminPage() {
             </div>
             <div className="text-[10px] sm:text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="truncate">Tersambung Cloud Neon DB</span>
+              <span className="truncate">Tersambung Cloud Database (Realtime Sync)</span>
             </div>
           </div>
         </div>

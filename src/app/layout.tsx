@@ -51,16 +51,21 @@ export const metadata: Metadata = {
 };
 
 import { ContentProvider } from "@/context/ContentContext";
+import { getInitialSiteContent } from "@/lib/get-initial-content";
 
-export default function RootLayout({
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const initialContent = await getInitialSiteContent();
+
   return (
     <html lang="id" className={`${plusJakartaSans.variable} ${inter.variable} ${caveat.variable} scroll-smooth`}>
       <body className="min-h-screen bg-[#F8FAFF] text-slate-900 font-sans antialiased selection:bg-purple-500 selection:text-white">
-        <ContentProvider>{children}</ContentProvider>
+        <ContentProvider initialContent={initialContent}>{children}</ContentProvider>
       </body>
     </html>
   );

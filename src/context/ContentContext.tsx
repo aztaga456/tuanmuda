@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { SiteContent, defaultSiteContent } from "@/data/defaultSiteContent";
+import { isFirebaseConfigured, subscribeToFirebaseContent } from "@/lib/firebase";
 
 export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined): SiteContent {
   if (!parsed || typeof parsed !== "object") return defaultSiteContent;
@@ -118,8 +119,14 @@ const ContentContext = createContext<ContentContextType>({
   reloadFromDatabase: async () => false,
 });
 
-export function ContentProvider({ children }: { children: React.ReactNode }) {
-  const [content, setContent] = useState<SiteContent>(defaultSiteContent);
+export function ContentProvider({
+  children,
+  initialContent,
+}: {
+  children: React.ReactNode;
+  initialContent?: SiteContent;
+}) {
+  const [content, setContent] = useState<SiteContent>(initialContent || defaultSiteContent);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const saveToStorage = (updated: SiteContent) => {
@@ -160,21 +167,45 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Tampilkan cache lokal terlebih dahulu agar UX instan tanpa kedip
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setContent(mergeWithDefault(parsed));
-      }
-    } catch (e) {
-      console.error("Failed to load CMS content from localStorage:", e);
-    } finally {
+    // 1. Prioritaskan initialContent dari server (langsung dari DB). Jangan timpa dengan cache lokal basi!
+    if (initialContent) {
+      setContent(mergeWithDefault(initialContent));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initialContent));
+      } catch {}
       setIsLoaded(true);
+    } else {
+      // Hanya jika initialContent kosong (misal SSR offline), baca dari localStorage
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setContent(mergeWithDefault(parsed));
+        }
+      } catch (e) {
+        console.error("Failed to load CMS content from localStorage:", e);
+      } finally {
+        setIsLoaded(true);
+      }
     }
 
-    // 2. SELALU ambil data terbaru dari Neon PostgreSQL di server
-    // Ini menjamin sinkronisasi real-time antar perangkat (HP, Laptop, PC, Publik)
+    // 2. Real-time Listener ke Firebase Firestore
+    // Bila admin mengubah data di PC / HP, semua layar lain langsung update secara realtime!
+    let unsubscribeFirebase: (() => void) | null = null;
+    if (isFirebaseConfigured()) {
+      try {
+        unsubscribeFirebase = subscribeToFirebaseContent((newContent) => {
+          if (isMounted && newContent) {
+            setContent(newContent);
+            saveToStorage(newContent);
+          }
+        });
+      } catch (fbErr) {
+        console.warn("Firebase realtime subscription notice:", fbErr);
+      }
+    }
+
+    // 3. Ambil data terbaru dari server (Neon DB / API) jika Firebase belum aktif
     const initFetch = async () => {
       try {
         const res = await fetch("/api/content", {
@@ -202,7 +233,7 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
 
     initFetch();
 
-    // 3. Sinkronisasi antar tab dalam browser yang sama
+    // 4. Sinkronisasi antar tab dalam browser yang sama
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
@@ -216,9 +247,12 @@ export function ContentProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener("storage", handleStorageChange);
     return () => {
       isMounted = false;
+      if (unsubscribeFirebase) {
+        unsubscribeFirebase();
+      }
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [initialContent]);
 
   const updateContent = (
     newContent: Partial<SiteContent> | ((prev: SiteContent) => SiteContent)

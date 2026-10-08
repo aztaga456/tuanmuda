@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useContent } from "@/context/ContentContext";
 import { getSafeImageUrl } from "@/lib/image-helper";
@@ -16,6 +16,10 @@ export default function Logo({ className = "", variant = "white", subtitle }: Lo
   const brand = content?.brand;
 
   const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [brand?.logoImage]);
 
   const displaySubtitle = subtitle || brand?.subtitle || "DIGITAL SOLUTION";
   const logoText1 = brand?.logoText1 || "TUAN";
