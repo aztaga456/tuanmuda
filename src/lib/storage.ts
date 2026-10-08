@@ -76,11 +76,16 @@ export async function saveUploadedFile(
     }
   }
 
-  // Mode Google Drive Storage
-  const isGDriveStorage = process.env.STORAGE_DRIVER === "gdrive";
+  // Mode Google Drive Storage (default jika bukan S3)
+  const isGDriveStorage =
+    process.env.STORAGE_DRIVER === "gdrive" ||
+    !process.env.STORAGE_DRIVER ||
+    process.env.STORAGE_DRIVER !== "s3";
   if (isGDriveStorage) {
     // 1. Opsi A: Google Apps Script Webhook (Zero GCP Setup, langsung simpan ke folder)
-    const webhookUrl = process.env.GDRIVE_WEBHOOK_URL;
+    const webhookUrl =
+      process.env.GDRIVE_WEBHOOK_URL ||
+      "https://script.google.com/macros/s/AKfycbwOJ_mMEzcbziNorIm7ujvRrcdiyApBQ2gKWkvVUvl257tYqYeoadRhGbUuUvIDlrtv/exec";
     if (webhookUrl) {
       try {
         const base64Data = fileBuffer.toString("base64");
@@ -191,6 +196,13 @@ export async function saveUploadedFile(
     }
   }
 
+  // Jika berjalan di Vercel / serverless AWS Lambda, filesystem /var/task bersifat read-only
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Gagal mengunggah file ke Google Drive storage. Pastikan webhook Google Drive aktif dan dapat diakses."
+    );
+  }
+
   // Mode Local Storage (public/uploads/)
   const uploadsDir = path.join(process.cwd(), "public", "uploads");
   if (!fs.existsSync(uploadsDir)) {
@@ -269,7 +281,9 @@ export async function deleteStoredFile(fileUrlOrPath: string): Promise<boolean> 
   // 1. Google Drive Deletion
   const gdriveFileId = extractGdriveFileId(fileUrlOrPath);
   if (gdriveFileId) {
-    const webhookUrl = process.env.GDRIVE_WEBHOOK_URL;
+    const webhookUrl =
+      process.env.GDRIVE_WEBHOOK_URL ||
+      "https://script.google.com/macros/s/AKfycbwOJ_mMEzcbziNorIm7ujvRrcdiyApBQ2gKWkvVUvl257tYqYeoadRhGbUuUvIDlrtv/exec";
     if (webhookUrl) {
       try {
         const res = await fetch(webhookUrl, {
