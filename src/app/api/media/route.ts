@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const rawId = searchParams.get("id");
     const rawUrl = searchParams.get("url");
 
-    const target = rawId || rawUrl;
+    const target = rawUrl || rawId;
     if (!target) {
       return NextResponse.json({ error: "Parameter 'id' atau 'url' wajib disertakan" }, { status: 400 });
     }
@@ -46,13 +46,98 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. Google Drive Storage
-    const fileId = extractGdriveFileId(target) || rawId;
-    if (!fileId) {
-      return NextResponse.json({ error: "ID file Google Drive tidak valid" }, { status: 400 });
+    // 2. Dukungan Remote URL (ImgBB, Cloudflare CDN, dll.)
+    // Berfungsi sebagai proxy agar tidak terkena blokir ISP / Handshake Failure di Indonesia
+    if (target.startsWith("http://") || target.startsWith("https://")) {
+      const isRemoteCdn = target.includes("ibb.co") || target.includes("imgbb") || !target.includes("google");
+      if (isRemoteCdn) {
+        const cached = memoryCache.get(target);
+        if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+          return new Response(new Uint8Array(cached.buffer), {
+            status: 200,
+            headers: {
+              "Content-Type": cached.contentType,
+              "Cache-Control": "public, max-age=31536000, immutable",
+              "X-Media-Cache": "HIT",
+            },
+          });
+        }
+
+        try {
+          const remoteRes = await fetch(target, {
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+          });
+
+          if (remoteRes.ok) {
+            const contentType = remoteRes.headers.get("content-type") || "image/jpeg";
+            const arrayBuffer = await remoteRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            if (memoryCache.size > 200) {
+              const firstKey = memoryCache.keys().next().value;
+              if (firstKey) memoryCache.delete(firstKey);
+            }
+            memoryCache.set(target, { buffer, contentType, cachedAt: Date.now() });
+
+            return new Response(new Uint8Array(buffer), {
+              status: 200,
+              headers: {
+                "Content-Type": contentType,
+                "Cache-Control": "public, max-age=31536000, immutable",
+                "X-Media-Cache": "MISS",
+              },
+            });
+          }
+        } catch (remoteErr) {
+          console.warn("[Media Proxy] Gagal direct fetch remote URL, mencoba fallback CDN:", target);
+        }
+
+        // Fallback: Jika direct fetch gagal (misal TLS handshake failure oleh ISP Indonesia), gunakan wsrv.nl CDN
+        try {
+          const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(target)}&output=webp`;
+          const wsrvRes = await fetch(wsrvUrl, {
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+          });
+
+          if (wsrvRes.ok) {
+            const contentType = wsrvRes.headers.get("content-type") || "image/webp";
+            const arrayBuffer = await wsrvRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            if (memoryCache.size > 200) {
+              const firstKey = memoryCache.keys().next().value;
+              if (firstKey) memoryCache.delete(firstKey);
+            }
+            memoryCache.set(target, { buffer, contentType, cachedAt: Date.now() });
+
+            return new Response(new Uint8Array(buffer), {
+              status: 200,
+              headers: {
+                "Content-Type": contentType,
+                "Cache-Control": "public, max-age=31536000, immutable",
+                "X-Media-Cache": "WSRV-FALLBACK",
+              },
+            });
+          }
+        } catch (wsrvErr) {
+          console.error("[Media Proxy] WSRV CDN fallback failed:", wsrvErr);
+        }
+      }
     }
 
-    // Cek cache in-memory
+    // 3. Google Drive Storage
+    const fileId = extractGdriveFileId(target) || rawId;
+    if (!fileId) {
+      return NextResponse.json({ error: "ID file media tidak valid" }, { status: 400 });
+    }
+
+    // Cek cache in-memory untuk Google Drive
     const cached = memoryCache.get(fileId);
     if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
       return new Response(new Uint8Array(cached.buffer), {
@@ -65,7 +150,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Coba endpoint Google CDN (tanpa Referer header agar tidak kena rate limit 429)
+    // Coba endpoint Google CDN
     const candidateUrls = [
       `https://lh3.googleusercontent.com/d/${fileId}`,
       `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`,
@@ -94,20 +179,17 @@ export async function GET(req: NextRequest) {
             break;
           }
         }
-      } catch (candidateErr) {
-        // Coba kandidat berikutnya
-      }
+      } catch {}
     }
 
     if (!imageBuffer) {
       return NextResponse.json(
-        { error: "Gambar tidak dapat dimuat dari Google Drive atau belum disetel publik" },
+        { error: "Gambar tidak dapat dimuat" },
         { status: 404 }
       );
     }
 
-    // Simpan ke cache memory (batasi maksimal 150 item agar hemat RAM)
-    if (memoryCache.size > 150) {
+    if (memoryCache.size > 200) {
       const firstKey = memoryCache.keys().next().value;
       if (firstKey) memoryCache.delete(firstKey);
     }

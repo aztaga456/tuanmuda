@@ -233,7 +233,21 @@ export function ContentProvider({
 
     initFetch();
 
-    // 4. Sinkronisasi antar tab dalam browser yang sama
+    // 4. Sinkronisasi antar tab dalam browser yang sama via BroadcastChannel & storage event
+    let broadcastChannel: BroadcastChannel | null = null;
+    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+      try {
+        broadcastChannel = new BroadcastChannel("tuanmuda_sync_channel");
+        broadcastChannel.onmessage = (event) => {
+          if (event.data?.type === "SYNC_CONTENT" && event.data?.content && isMounted) {
+            const merged = mergeWithDefault(event.data.content);
+            setContent(merged);
+            saveToStorage(merged);
+          }
+        };
+      } catch {}
+    }
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
         try {
@@ -249,6 +263,11 @@ export function ContentProvider({
       isMounted = false;
       if (unsubscribeFirebase) {
         unsubscribeFirebase();
+      }
+      if (broadcastChannel) {
+        try {
+          broadcastChannel.close();
+        } catch {}
       }
       window.removeEventListener("storage", handleStorageChange);
     };
@@ -310,6 +329,13 @@ export function ContentProvider({
       const data = await res.json();
       if (data.success) {
         saveToStorage(targetContent);
+        if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+          try {
+            const bc = new BroadcastChannel("tuanmuda_sync_channel");
+            bc.postMessage({ type: "SYNC_CONTENT", content: targetContent });
+            bc.close();
+          } catch {}
+        }
         return {
           success: true,
           message: data.message || "Konten berhasil disinkronkan ke database!",

@@ -36,8 +36,8 @@ export function extractGdriveFileId(urlOrPath?: string | null): string | null {
 export function getSafeImageUrl(url?: string | null): string {
   if (!url) return "";
 
-  // Data URI atau URL internal /api/media sudah aman
-  if (url.startsWith("data:") || url.startsWith("/api/media")) {
+  // Data URI, blob URL preview, atau URL internal /api/media sudah aman
+  if (url.startsWith("data:") || url.startsWith("blob:") || url.startsWith("/api/media")) {
     return url;
   }
 
@@ -56,6 +56,11 @@ export function getSafeImageUrl(url?: string | null): string {
   const gdriveId = extractGdriveFileId(url);
   if (gdriveId) {
     return `/api/media?id=${gdriveId}`;
+  }
+
+  // Jika URL ImgBB (i.ibb.co / imgbb.com), gunakan proxy /api/media agar tidak diblokir ISP Indonesia
+  if (url.includes("ibb.co") || url.includes("imgbb.com")) {
+    return `/api/media?url=${encodeURIComponent(url)}`;
   }
 
   // Jika file lokal uploads

@@ -123,7 +123,7 @@ export default function AdminPage() {
     setIsAuthenticated(false);
   };
 
-  // Upload file asli ke Storage Cloud (Google Drive / S3 / Local)
+  // Upload file asli ke Storage Cloud (ImgBB / Google Drive / Local)
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     onSuccess: (url: string) => void,
@@ -136,6 +136,13 @@ export default function AdminPage() {
       alert("Ukuran gambar maksimal 10MB.");
       return;
     }
+
+    // 1. Tampilkan pratinjau lokal seketika (Zero Latency Instant Preview)
+    try {
+      const localPreviewUrl = URL.createObjectURL(file);
+      onSuccess(localPreviewUrl);
+      setHasUnsyncedChanges(true);
+    } catch {}
 
     setIsUploading(true);
     showToast("Mengunggah gambar ke Cloud Storage...");
@@ -151,12 +158,14 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (data.success && data.url) {
+        // 2. Ganti URL blob dengan URL cloud permanen
         onSuccess(data.url);
         setHasUnsyncedChanges(true);
 
         // Jika ada gambar lama yang diganti, catat untuk dihapus saat sinkronisasi
         if (
           oldUrl &&
+          !oldUrl.startsWith("blob:") &&
           (oldUrl.includes("googleusercontent.com") ||
             oldUrl.includes("drive.google.com") ||
             oldUrl.startsWith("/uploads/"))
@@ -164,7 +173,7 @@ export default function AdminPage() {
           setReplacedUrls((prev) => Array.from(new Set([...prev, oldUrl])));
         }
 
-        showToast("✅ Gambar berhasil diunggah!");
+        showToast("✅ Gambar berhasil diunggah & siap disimpan!");
       } else {
         alert("Gagal mengunggah file: " + (data.error || "Cek koneksi internet"));
       }
@@ -288,6 +297,20 @@ export default function AdminPage() {
     );
   }
 
+  const ADMIN_TABS = [
+    { id: "brand", label: "Brand & Logo", icon: "🏷️" },
+    { id: "hero", label: "Hero Section", icon: "🚀" },
+    { id: "servicesBar", label: "Solusi Terpadu", icon: "⚡" },
+    { id: "whyUs", label: "Standar Mutu", icon: "🛡️" },
+    { id: "pricing", label: "Paket & Harga", icon: "💰" },
+    { id: "extensions", label: "Layanan Ekstensi", icon: "🧩" },
+    { id: "portfolio", label: "Portofolio", icon: "💼" },
+    { id: "workflow", label: "6 Alur Kerja", icon: "🔄" },
+    { id: "testimonials", label: "Testimoni", icon: "⭐" },
+    { id: "socialProof", label: "Social Proof Toast", icon: "🔔" },
+    { id: "backup", label: "Export / Backup", icon: "📦" },
+  ] as const;
+
   // ==========================================
   // AUTHENTICATED ADMIN DASHBOARD
   // ==========================================
@@ -301,132 +324,134 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Top Header */}
-      <header className="bg-[#090C22] border-b border-white/10 sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-4">
+      {/* Top Header Panel Admin */}
+      <header className="bg-[#090C22] border-b border-white/10 sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 shadow-lg backdrop-blur-md">
+        {/* Brand Info */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md border border-white/20 shrink-0">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-600/30 border border-white/20 shrink-0">
             {content.brand.emblemText || "TM"}
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <span className="font-extrabold text-white text-sm sm:text-base tracking-tight truncate">
-                {content.brand.name || "TUANMUDA"} <span className="hidden xs:inline">Admin</span>
+                {content.brand.name || "TUANMUDA"} <span className="text-indigo-400">Admin</span>
               </span>
-              <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 sm:px-2 py-0.5 rounded-full font-mono shrink-0">
+              <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 sm:px-2 py-0.5 rounded-full font-mono shrink-0 font-bold">
                 CMS
               </span>
             </div>
-            <div className="text-[10px] sm:text-[11px] text-emerald-400 flex items-center gap-1 font-medium">
+            <div className="text-[10px] sm:text-[11px] text-emerald-400 flex items-center gap-1 font-medium mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="truncate">Tersambung Cloud Database (Realtime Sync)</span>
+              <span className="truncate hidden xs:inline">Realtime Cloud Sync Aktif</span>
+              <span className="truncate xs:hidden">Sync Aktif</span>
             </div>
           </div>
         </div>
 
+        {/* Action Header Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* TOMBOL SIMPAN UTAMA (Sangat menonjol & responsif) */}
+          <button
+            type="button"
+            onClick={handleSync}
+            disabled={isSyncing}
+            className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all inline-flex items-center gap-2 shadow-lg cursor-pointer ${
+              isSyncing
+                ? "bg-indigo-600/70 text-white cursor-wait border border-indigo-400/40"
+                : hasUnsyncedChanges
+                ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-emerald-500/30 border border-emerald-300 ring-2 ring-emerald-400/40 animate-pulse"
+                : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 shadow-sm"
+            }`}
+            title="Simpan perubahan ke Cloud Database (langsung aktif realtime di HP & semua pengunjung)"
+          >
+            {isSyncing ? (
+              <>
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span className="hidden xs:inline">Menyimpan...</span>
+                <span className="xs:hidden">...</span>
+              </>
+            ) : hasUnsyncedChanges ? (
+              <>
+                <span className="text-sm">💾</span>
+                <span className="font-extrabold">Simpan</span>
+                <span className="hidden sm:inline font-bold">Perubahan</span>
+              </>
+            ) : (
+              <>
+                <span className="text-emerald-400">✓</span>
+                <span className="font-bold">Tersimpan</span>
+              </>
+            )}
+          </button>
+
           {/* Tombol Tarik Data Cloud dari Database */}
           <button
             type="button"
             onClick={handleReload}
             disabled={isReloading}
-            className={`px-2 sm:px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-xs font-semibold text-sky-300 hover:text-sky-200 border border-sky-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
+            className={`px-2 sm:px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-xs font-semibold text-sky-300 hover:text-sky-200 border border-sky-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
               isReloading ? "opacity-75 cursor-wait" : ""
             }`}
-            title="Tarik data terbaru dari Neon Database (jika baru saja diedit dari HP atau perangkat lain)"
+            title="Tarik data terbaru dari Neon Database (jika baru diedit dari HP atau perangkat lain)"
           >
             <span className={isReloading ? "animate-spin" : ""}>🔄</span>
-            <span className="hidden sm:inline">{isReloading ? "Memuat..." : "Tarik Data Cloud"}</span>
-            <span className="sm:hidden">Tarik</span>
+            <span className="hidden md:inline">{isReloading ? "Memuat..." : "Tarik Data Cloud"}</span>
+            <span className="md:hidden hidden xs:inline">Tarik</span>
           </button>
 
+          {/* Tombol Lihat Website */}
           <Link
             href="/"
             target="_blank"
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 hover:text-white border border-white/10 transition-colors inline-flex items-center gap-1.5"
-            title="Buka website di tab baru"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 hover:text-white border border-white/10 transition-colors inline-flex items-center gap-1.5"
+            title="Buka website publik di tab baru"
           >
             <span>👁️</span>
-            <span className="hidden sm:inline">Website</span>
+            <span className="hidden md:inline">Website</span>
           </Link>
-
-          {/* Tombol Simpan & Sinkronkan ke Neon & Storage */}
-          <button
-            type="button"
-            onClick={handleSync}
-            disabled={isSyncing}
-            className={`px-2.5 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-md cursor-pointer ${
-              hasUnsyncedChanges
-                ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white animate-pulse shadow-amber-500/25 border border-amber-300/30"
-                : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-600/20 border border-emerald-400/30"
-            } ${isSyncing ? "opacity-75 cursor-wait" : ""}`}
-            title="Simpan & Sinkronkan perubahan ke Database Neon dan bersihkan file lama di Google Drive"
-          >
-            <span className={isSyncing ? "animate-spin" : ""}>
-              {isSyncing ? "⏳" : hasUnsyncedChanges ? "⚡" : "✓"}
-            </span>
-            <span className="hidden sm:inline">
-              {isSyncing
-                ? "Menyinkronkan..."
-                : hasUnsyncedChanges
-                ? "Sinkronkan Sekarang"
-                : "Tersinkronisasi"}
-            </span>
-            <span className="sm:hidden">{isSyncing ? "..." : "Sync"}</span>
-          </button>
 
           {/* Tombol Backup Snapshot */}
           <button
             type="button"
             onClick={handleBackup}
             disabled={isBackingUp}
-            className={`px-2 sm:px-3 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-xs font-semibold text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer ${
+            className={`hidden sm:inline-flex px-2 sm:px-3 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-xs font-semibold text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 transition-colors items-center gap-1.5 cursor-pointer ${
               isBackingUp ? "opacity-75 cursor-wait" : ""
             }`}
             title="Backup snapshot database ke Neon & ekspor aset gambar ke storage"
           >
-            <span>{isBackingUp ? "⏳" : "💾"}</span>
-            <span className="hidden sm:inline">{isBackingUp ? "Membackup..." : "Backup"}</span>
+            <span>{isBackingUp ? "⏳" : "📦"}</span>
+            <span className="hidden lg:inline">{isBackingUp ? "Membackup..." : "Backup"}</span>
           </button>
 
+          {/* Tombol Keluar */}
           <button
             onClick={handleLogout}
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 text-xs font-semibold text-pink-300 hover:text-pink-200 border border-pink-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-            title="Keluar"
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 text-xs font-semibold text-pink-300 hover:text-pink-200 border border-pink-500/30 transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+            title="Keluar dari portal admin"
           >
             <span>🚪</span>
-            <span className="hidden sm:inline">Keluar</span>
+            <span className="hidden md:inline">Keluar</span>
           </button>
         </div>
       </header>
 
       {/* Main Layout: Sidebar & Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Left Sidebar Tabs */}
-        <aside className="w-full md:w-64 bg-[#080B1E] border-b md:border-b-0 md:border-r border-white/10 p-2 sm:p-4 shrink-0 no-scrollbar">
-          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 hidden md:block">
+        {/* Left Sidebar Tabs (Desktop) */}
+        <aside className="w-full md:w-64 bg-[#080B1E] border-b md:border-b-0 md:border-r border-white/10 p-2 sm:p-4 shrink-0 no-scrollbar hidden md:block">
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
             Menu Bagian Website
           </div>
-          <nav className="flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto md:overflow-visible pb-1 md:pb-0 touch-pan-x no-scrollbar">
-            {[
-              { id: "brand", label: "Brand & Logo", icon: "🏷️" },
-              { id: "hero", label: "Hero Section", icon: "🚀" },
-              { id: "servicesBar", label: "Solusi Terpadu", icon: "⚡" },
-              { id: "whyUs", label: "Standar Mutu", icon: "🛡️" },
-              { id: "pricing", label: "Paket & Harga", icon: "💰" },
-              { id: "extensions", label: "Layanan Ekstensi", icon: "🧩" },
-              { id: "portfolio", label: "Portofolio", icon: "💼" },
-              { id: "workflow", label: "6 Alur Kerja", icon: "🔄" },
-              { id: "testimonials", label: "Testimoni", icon: "⭐" },
-              { id: "socialProof", label: "Social Proof Toast", icon: "🔔" },
-              { id: "backup", label: "Export / Backup", icon: "📦" },
-            ].map((tab) => (
+          <nav className="flex flex-col gap-1">
+            {ADMIN_TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   activeTab === tab.id
                     ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/25 border border-white/10"
-                    : "text-slate-400 hover:text-white hover:bg-white/5 bg-white/[0.02] md:bg-transparent"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
                 }`}
               >
                 <span>{tab.icon}</span>
@@ -437,7 +462,57 @@ export default function AdminPage() {
         </aside>
 
         {/* Workspace Form Container */}
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto max-w-5xl">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 overflow-y-auto max-w-5xl pb-32 md:pb-12">
+          {/* ========================================================
+              NAVIGASI KHUSUS MOBILE (UI HP yang Mudah Digunakan)
+              ======================================================== */}
+          <div className="md:hidden mb-4 bg-gradient-to-b from-[#0f1338] to-[#0a0d26] border border-white/15 rounded-2xl p-3 shadow-xl">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>📂</span> Menu Bagian Website
+              </span>
+              <span className="text-[10px] text-slate-400 bg-white/5 px-2 py-0.5 rounded-full font-mono">
+                11 Bagian
+              </span>
+            </div>
+
+            {/* Dropdown Selector Cepat untuk Pengguna HP */}
+            <div className="relative mb-2.5">
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value as any)}
+                aria-label="Pilih Bagian Website"
+                className="w-full bg-[#151945] border border-indigo-500/30 text-white font-bold text-xs rounded-xl py-2.5 px-3 pr-8 appearance-none focus:outline-none focus:border-indigo-400 cursor-pointer shadow-inner"
+              >
+                {ADMIN_TABS.map((tab) => (
+                  <option key={tab.id} value={tab.id} className="bg-[#0b0e2b] text-white py-1">
+                    {tab.icon} {tab.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-300 text-xs font-bold">
+                ▼
+              </div>
+            </div>
+
+            {/* Horizontal Swipeable Pill Chips */}
+            <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar touch-pan-x">
+              {ADMIN_TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer ${
+                    activeTab === tab.id
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md border border-white/20"
+                      : "bg-white/5 text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           {/* ========================================================
               TAB 1: IDENTITAS BRAND & LOGO
               ======================================================== */}
@@ -627,6 +702,13 @@ export default function AdminPage() {
                           alt="Preview Logo Dark"
                           className="max-h-12 max-w-[200px] object-contain my-2"
                           referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            if (!img.dataset.fallback && content.brand.logoImage) {
+                              img.dataset.fallback = "true";
+                              img.src = `https://wsrv.nl/?url=${encodeURIComponent(content.brand.logoImage)}`;
+                            }
+                          }}
                         />
                       ) : (
                         <div className="flex items-center gap-2 my-2">
@@ -2886,6 +2968,13 @@ export default function AdminPage() {
                               alt={item.title || "Thumbnail Preview"}
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                if (!img.dataset.fallback && item.image) {
+                                  img.dataset.fallback = "true";
+                                  img.src = `https://wsrv.nl/?url=${encodeURIComponent(item.image)}`;
+                                }
+                              }}
                             />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -3198,6 +3287,13 @@ export default function AdminPage() {
                               alt={item.title || "Portfolio Preview"}
                               className="w-full h-full object-cover"
                               referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                if (!img.dataset.fallback && item.image) {
+                                  img.dataset.fallback = "true";
+                                  img.src = `https://wsrv.nl/?url=${encodeURIComponent(item.image)}`;
+                                }
+                              }}
                             />
                           </div>
                           <div className="min-w-0 flex-1">
@@ -4149,13 +4245,75 @@ export default function AdminPage() {
         </main>
       </div>
 
-      {/* Floating Notification Bar jika ada perubahan belum disinkronkan ke Database */}
+      {/* ========================================================
+          STICKY MOBILE BOTTOM BAR (Khusus Layar HP / Mobile)
+          Tombol Simpan selalu menempel di bawah jempol pengguna!
+          ======================================================== */}
+      <aside
+        aria-label="Aksi Simpan Mobile"
+        className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-[#07091Ef2] backdrop-blur-2xl border-t border-white/15 p-3 px-4 shadow-[0_-10px_35px_rgba(0,0,0,0.85)] flex items-center justify-between gap-3"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                hasUnsyncedChanges ? "bg-amber-400 animate-pulse" : "bg-emerald-400"
+              }`}
+            />
+            <span className="text-[11px] font-bold text-white truncate">
+              {hasUnsyncedChanges ? "Ada Perubahan Baru" : "Semua Tersimpan"}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-400 truncate mt-0.5">
+            {hasUnsyncedChanges
+              ? "Klik simpan untuk publikasi"
+              : `Realtime Sync (${lastSyncTime || "Aktif"})`}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleSync}
+          disabled={isSyncing}
+          className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 shadow-lg transition-all active:scale-95 cursor-pointer shrink-0 ${
+            isSyncing
+              ? "bg-indigo-600/70 text-white cursor-wait border border-indigo-400/30"
+              : hasUnsyncedChanges
+              ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-slate-950 shadow-emerald-500/40 ring-2 ring-emerald-400/50 animate-pulse"
+              : "bg-white/10 hover:bg-white/15 text-emerald-300 border border-emerald-400/30"
+          }`}
+        >
+          {isSyncing ? (
+            <>
+              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Menyimpan...</span>
+            </>
+          ) : hasUnsyncedChanges ? (
+            <>
+              <span>💾</span>
+              <span>Simpan Sekarang</span>
+            </>
+          ) : (
+            <>
+              <span>✓</span>
+              <span>Tersimpan</span>
+            </>
+          )}
+        </button>
+      </aside>
+
+      {/* Floating Notification Bar di Desktop jika ada perubahan belum disinkronkan */}
       {hasUnsyncedChanges && (
-        <aside aria-label="Notifikasi Sinkronisasi" className="fixed bottom-4 inset-x-3 sm:inset-x-auto sm:right-6 z-50 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-amber-300/40 backdrop-blur-md max-w-lg">
-          <span className="text-xl shrink-0 animate-pulse">⚡</span>
+        <aside
+          aria-label="Notifikasi Sinkronisasi Desktop"
+          className="hidden md:flex fixed bottom-5 right-6 z-50 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 px-5 rounded-2xl shadow-2xl items-center gap-4 border border-indigo-500/40 backdrop-blur-xl max-w-md"
+        >
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg shrink-0">
+            ⚡
+          </div>
           <div className="text-xs min-w-0">
             <p className="font-bold text-white leading-tight">Perubahan Belum Disimpan ke Database!</p>
-            <p className="text-[11px] text-amber-100 opacity-90 leading-tight mt-0.5">
+            <p className="text-[11px] text-slate-300 opacity-90 leading-tight mt-0.5">
               Klik simpan agar perubahan langsung aktif di HP & semua pengunjung.
             </p>
           </div>
@@ -4163,7 +4321,7 @@ export default function AdminPage() {
             type="button"
             onClick={handleSync}
             disabled={isSyncing}
-            className="ml-auto px-3.5 py-1.5 bg-white text-orange-900 hover:bg-orange-50 font-bold rounded-xl text-xs shrink-0 cursor-pointer shadow-md transition-all active:scale-95"
+            className="ml-auto px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs shrink-0 cursor-pointer shadow-lg shadow-emerald-500/25 transition-all active:scale-95"
           >
             {isSyncing ? "Menyimpan..." : "Simpan Sekarang"}
           </button>

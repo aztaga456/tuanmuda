@@ -98,55 +98,8 @@ export async function POST(req: NextRequest) {
     let savedToFirebase = false;
     let savedToNeon = false;
 
-    // 1. Simpan ke Firebase Firestore (Realtime Database Utama)
-    if (isFirebaseConfigured()) {
-      try {
-        await saveFirebaseContent(newContent);
-        savedToFirebase = true;
-      } catch (fbErr: any) {
-        console.error("[Content API] Gagal simpan ke Firebase:", fbErr.message);
-      }
-    }
-
-    // 2. Deteksi & pembersihan gambar usang (Garbage Collection)
-    try {
-      let oldData: any = null;
-      if (process.env.DATABASE_URL && prisma) {
-        const existingRecord = await prisma.siteContent.findUnique({
-          where: { key: "main" },
-        });
-        if (existingRecord) oldData = existingRecord.data;
-      }
-
-      if (oldData) {
-        const oldUrls = extractMediaUrlsFromContent(oldData);
-        const currentUrls = extractMediaUrlsFromContent(newContent);
-
-        // Gambar yang ada di database lama tetapi tidak ada lagi di konten baru
-        const orphanedUrls = oldUrls.filter((url) => !currentUrls.includes(url));
-        const allToDelete = Array.from(new Set([...orphanedUrls, ...explicitReplaced]));
-
-        for (const url of allToDelete) {
-          try {
-            const ok = await deleteStoredFile(url);
-            if (ok) {
-              deletedFiles.push(url);
-              if (process.env.DATABASE_URL && prisma) {
-                try {
-                  await prisma.media.deleteMany({ where: { url } });
-                } catch {}
-              }
-            }
-          } catch (delErr) {
-            console.warn(`Gagal membersihkan file lama (${url}):`, delErr);
-          }
-        }
-      }
-    } catch (gcErr) {
-      console.warn("Storage garbage collection notice:", gcErr);
-    }
-
-    // 3. Simpan juga ke Neon PostgreSQL jika aktif (Dual Backup)
+    // 1. Simpan ke Neon PostgreSQL TERLEBIH DAHULU (Ultra cepat < 50ms)
+    // Memastikan data langsung tersimpan permanen di cloud database tanpa menunggu proses lain
     if (process.env.DATABASE_URL && prisma) {
       try {
         await prisma.siteContent.upsert({
@@ -167,17 +120,65 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let message = "Konten berhasil disimpan";
-    if (savedToFirebase && savedToNeon) {
-      message = "Konten berhasil disimpan ke Firebase Realtime & Neon Database!";
-    } else if (savedToFirebase) {
-      message = "Konten berhasil disimpan secara realtime ke Firebase!";
-    } else if (savedToNeon) {
-      message = "Konten berhasil disimpan ke Neon Database!";
+    // 2. Simpan ke Firebase Realtime & Firestore (Non-blocking timeout max 800ms)
+    // Jika koneksi Firebase cepat, ia langsung sinkron. Jika ada delay, ia tidak menggantung tombol simpan user!
+    if (isFirebaseConfigured()) {
+      try {
+        const fbRes = await Promise.race([
+          saveFirebaseContent(newContent),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 800)),
+        ]);
+        if (fbRes) savedToFirebase = true;
+      } catch (fbErr: any) {
+        console.warn("[Content API] Firebase sync notice:", fbErr.message);
+      }
     }
 
-    if (deletedFiles.length > 0) {
-      message += ` (${deletedFiles.length} file gambar lama dibersihkan)`;
+    // 3. Deteksi & pembersihan gambar lama di BACKGROUND (Non-blocking)
+    // Tidak menunda respons simpan ke user sama sekali
+    try {
+      let oldData: any = null;
+      if (process.env.DATABASE_URL && prisma) {
+        const existingRecord = await prisma.siteContent.findUnique({
+          where: { key: "main" },
+        });
+        if (existingRecord) oldData = existingRecord.data;
+      }
+
+      if (oldData) {
+        const oldUrls = extractMediaUrlsFromContent(oldData);
+        const currentUrls = extractMediaUrlsFromContent(newContent);
+        const orphanedUrls = oldUrls.filter((url) => !currentUrls.includes(url));
+        const allToDelete = Array.from(new Set([...orphanedUrls, ...explicitReplaced]));
+
+        if (allToDelete.length > 0) {
+          deletedFiles = allToDelete;
+          // Jalankan pembersihan di background tanpa mengunci response HTTP
+          (async () => {
+            for (const url of allToDelete) {
+              try {
+                await deleteStoredFile(url);
+                if (process.env.DATABASE_URL && prisma) {
+                  try {
+                    await prisma.media.deleteMany({ where: { url } });
+                  } catch {}
+                }
+              } catch (delErr) {
+                console.warn(`[Background GC] Gagal hapus file (${url}):`, delErr);
+              }
+            }
+          })().catch(() => {});
+        }
+      }
+    } catch (gcErr) {
+      console.warn("Storage garbage collection notice:", gcErr);
+    }
+
+    let message = "Konten berhasil disimpan ke database & langsung aktif realtime!";
+    if (savedToFirebase && savedToNeon) {
+      message = "Konten berhasil disimpan ke Neon DB & Firebase Realtime!";
+    } else if (savedToNeon) {
+      message = "Konten berhasil disimpan ke Cloud Database!";
     }
 
     return NextResponse.json({
