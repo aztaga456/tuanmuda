@@ -7,7 +7,7 @@ import path from "path";
 
 /**
  * POST /api/backup
- * Melakukan backup snapshot database ke Neon & mengunggah/sinkron gambar lokal ke Google Drive Storage
+ * Melakukan backup snapshot database ke Neon & mengunggah/sinkron gambar lokal ke ImgBB Cloud Storage
  */
 export async function POST(req: NextRequest) {
   try {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Scan & Backup Gambar Lokal / Aktif ke Google Drive Storage
+    // 3. Scan & Backup Gambar Lokal / Aktif ke ImgBB Storage
     const mediaUrls = extractMediaUrlsFromContent(currentContent);
     let imagesBackedUpCount = 0;
     const backedUpImages: string[] = [];
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
                 ? "image/webp"
                 : "image/png";
 
-            // Unggah buffer ke storage cloud (Google Drive / S3)
+            // Unggah buffer ke storage cloud (ImgBB / S3)
             const uploaded = await saveUploadedFile(fileBuffer, `backup-${localFilename}`, mimeType);
             imagesBackedUpCount++;
             backedUpImages.push(uploaded.url);
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Backup berhasil! Snapshot database tersimpan di Neon & ${imagesBackedUpCount} aset gambar lokal disinkronkan ke storage.`,
+      message: `Backup berhasil! Snapshot database tersimpan di Neon & ${imagesBackedUpCount} aset gambar disinkronkan ke ImgBB Cloud.`,
       backupKey,
       timestamp,
       stats: {
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
         bookingsCount,
         mediaCount,
         databaseProvider: "Neon PostgreSQL",
-        storageDriver: process.env.STORAGE_DRIVER || "gdrive",
+        storageDriver: process.env.STORAGE_DRIVER || "imgbb",
       },
     });
   } catch (err: any) {

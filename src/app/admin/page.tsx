@@ -683,11 +683,11 @@ export default function AdminPage() {
                       <span>👁️</span> Pratinjau Logo Aktif:
                     </span>
                     {content.brand.logoImage && (
-                      <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 font-bold">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        {content.brand.logoImage.includes("googleusercontent.com") || content.brand.logoImage.includes("drive.google.com")
-                          ? "☁️ Terhubung ke Google Drive"
-                          : "📁 File Siap"}
+                        {content.brand.logoImage.includes("ibb.co") || content.brand.logoImage.includes("imgbb")
+                          ? "☁️ Terhubung ke ImgBB Cloud"
+                          : "📁 Media Aktif"}
                       </span>
                     )}
                   </div>
@@ -3956,7 +3956,7 @@ export default function AdminPage() {
                     <span>📦</span> Sinkronisasi Cloud, Backup & Ekspor Data
                   </h2>
                   <p className="text-xs text-slate-400 mt-1">
-                    Kelola sinkronisasi langsung ke Neon PostgreSQL dan Google Drive Storage.
+                    Kelola sinkronisasi langsung ke Neon PostgreSQL dan ImgBB Cloud Storage.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -4010,7 +4010,7 @@ export default function AdminPage() {
                     </div>
                     <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Google Drive (nusadigitalstorage)
+                      ImgBB Cloud Storage (Aktif & Realtime)
                     </div>
                   </div>
                 </div>
@@ -4039,14 +4039,14 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Notice Garbarge Collection */}
+              {/* Notice Garbage Collection */}
               {replacedUrls.length > 0 && (
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-base">🗑️</span>
                     <span>
                       Ada <strong>{replacedUrls.length} file gambar lama</strong> yang diganti.
-                      File tersebut akan otomatis dibersihkan dari Google Drive saat Anda menekan tombol <strong>Sinkronkan Sekarang</strong>.
+                      File tersebut akan otomatis dibersihkan dari penyimpanan cloud saat Anda menekan tombol <strong>Sinkronkan Sekarang</strong>.
                     </span>
                   </div>
                   <button
@@ -4067,7 +4067,7 @@ export default function AdminPage() {
                     <div className="text-2xl mb-2">⚡</div>
                     <h3 className="font-bold text-white text-sm">Simpan & Sinkronkan</h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Update konten langsung ke Neon DB dan hapus otomatis gambar usang di Google Drive.
+                      Update konten langsung ke Cloud DB dan bersihkan otomatis gambar usang di storage.
                     </p>
                   </div>
                   <button
@@ -4086,7 +4086,7 @@ export default function AdminPage() {
                     <div className="text-2xl mb-2">📦</div>
                     <h3 className="font-bold text-white text-sm">Snapshot Backup Neon</h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Buat titik pemulihan permanen di Neon Database & ekspor gambar lokal ke Google Drive.
+                      Buat titik pemulihan permanen di Neon Database & arsipkan data terbaru.
                     </p>
                   </div>
                   <button
