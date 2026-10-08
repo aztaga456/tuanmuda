@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import ServicesBar from "@/components/ServicesBar";
@@ -13,80 +12,134 @@ import WorkflowSection from "@/components/WorkflowSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import CtaBanner from "@/components/CtaBanner";
 import Footer from "@/components/Footer";
-import BookingModal from "@/components/BookingModal";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import SocialProofPopup from "@/components/SocialProofPopup";
+import { useContent } from "@/context/ContentContext";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 export default function Home() {
-  const [bookingModalOpen, setBookingModalOpen] = useState(false);
-  const [selectedServiceForBooking, setSelectedServiceForBooking] = useState("Website Development");
-
-  const handleOpenBooking = (serviceName?: string) => {
-    if (serviceName) {
-      setSelectedServiceForBooking(serviceName);
-    }
-    setBookingModalOpen(true);
-  };
-
-  const handleFilterService = (category: string) => {
-    handleOpenBooking(category);
-  };
+  const { content } = useContent();
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
 
   return (
     <div className="relative min-h-screen bg-[#F8FAFF] text-slate-900 selection:bg-purple-500 selection:text-white">
       {/* 1. Global Navigation Bar */}
-      <Navbar onOpenBooking={() => handleOpenBooking()} />
+      <Navbar
+        onOpenBooking={() =>
+          openWhatsApp(
+            `Halo ${brandName}, saya ingin konsultasi gratis mengenai layanan digital & solusi bisnis Anda.`,
+            waNumber
+          )
+        }
+      />
 
       <main>
-        {/* 2. Hero Section (Gradient Navy-Purple, 3D Laptop/Phone/Cylinder stage, Starburst, metrics strip) */}
-        <HeroSection onOpenBooking={() => handleOpenBooking()} />
-
-        {/* 3. Services Bar (Iconic 3D icon row resting under the wave from HERO SECTION.jpg) */}
-        <ServicesBar onSelectService={(s) => handleOpenBooking(s)} />
-
-        {/* 4. Why Us / Search & Category Finder (Matching UI.jpg with 3D floating phone & 4-card feature row) */}
-        <WhyUsSection
-          onOpenBooking={() => handleOpenBooking()}
-          onFilterService={handleFilterService}
+        {/* 2. Hero Section */}
+        <HeroSection
+          onOpenBooking={() =>
+            openWhatsApp(
+              `Halo ${brandName}, saya ingin mulai konsultasi pembuatan website / branding untuk bisnis saya.`,
+              waNumber
+            )
+          }
         />
 
-        {/* 5. Packages & Pricing (PRD Section 5.5: Beli Lepas vs Langganan, Section 5.6: Sosmed 3 Tiers, Ads) */}
-        <PricingSection onSelectPlan={(plan, svc) => handleOpenBooking(`${svc} - ${plan}`)} />
+        {/* 3. Services Bar */}
+        <ServicesBar
+          onSelectService={(service) =>
+            openWhatsApp(
+              `Halo ${brandName}, saya tertarik dengan layanan ${service}. Mohon informasi detail paket dan alur pengerjaannya.`,
+              waNumber
+            )
+          }
+        />
 
-        {/* 6. Extension Services (PRD Section 5.8: Workshop AI, Pelatihan Foto AI, Packaging, Web App) */}
-        <ExtensionsSection onSelectExtension={(ext) => handleOpenBooking(ext)} />
+        {/* 4. Why Us / Search & Category Finder */}
+        <WhyUsSection
+          onOpenBooking={() =>
+            openWhatsApp(
+              `Halo ${brandName}, saya ingin jadwalkan konsultasi langsung dengan tim profesional Anda mengenai kebutuhan digital bisnis saya.`,
+              waNumber
+            )
+          }
+          onFilterService={(category) =>
+            openWhatsApp(
+              `Halo ${brandName}, saya ingin tanya solusi digital kategori ${category} untuk bisnis saya.`,
+              waNumber
+            )
+          }
+        />
 
-        {/* 7. Featured Portfolio (Matching UI.jpg "Featured Ads" 4-column grid + detailed case study modal) */}
+        {/* 5. Packages & Pricing */}
+        <PricingSection
+          onSelectPlan={(plan, svc) =>
+            openWhatsApp(
+              `Halo ${brandName}, saya ingin pesan / konsultasi Paket ${svc} - ${plan}. Mohon informasi detail dan proses pemesanannya.`,
+              waNumber
+            )
+          }
+        />
+
+        {/* 6. Extension Services */}
+        <ExtensionsSection
+          onSelectExtension={(ext) =>
+            openWhatsApp(
+              `Halo ${brandName}, saya tertarik dan ingin konsultasi mengenai program: ${ext}. Mohon info penawaran dan jadwalnya.`,
+              waNumber
+            )
+          }
+        />
+
+        {/* 7. Featured Portfolio */}
         <PortfolioSection />
 
-        {/* 8. UMKM Special Discount Banner (Matching UI.jpg blue banner + interactive savings simulator) */}
-        <UmkmPromoBanner onOpenBooking={(s) => handleOpenBooking(s || "Website UMKM")} />
+        {/* 8. UMKM Special Discount Banner */}
+        <UmkmPromoBanner
+          onOpenBooking={(serviceName) =>
+            openWhatsApp(
+              `Halo ${brandName}, saya ingin klaim Promo Diskon Khusus UMKM untuk layanan ${
+                serviceName || "Website UMKM"
+              }. Mohon dibantu proses dan info slotnya!`,
+              waNumber
+            )
+          }
+        />
 
-        {/* 9. Workflow 7-Step Timeline (PRD Section 5.11: Alur Kerja Transparan) */}
+        {/* 9. Workflow 7-Step Timeline */}
         <WorkflowSection />
 
-        {/* 10. Client Testimonials (PRD Section 5.12) */}
+        {/* 10. Client Testimonials */}
         <TestimonialsSection />
 
         {/* 11. Final High Impact CTA Banner */}
-        <CtaBanner onOpenBooking={() => handleOpenBooking()} />
+        <CtaBanner
+          onOpenBooking={() =>
+            openWhatsApp(
+              `Halo ${brandName}, saya siap berkolaborasi untuk mengembangkan proyek digital bisnis saya! Saya ingin booking sesi konsultasi.`,
+              waNumber
+            )
+          }
+        />
       </main>
 
-      {/* 13. Comprehensive Footer with Selong Studio Address & Map (PRD Section 5.13) */}
+      {/* 12. Comprehensive Footer */}
       <Footer />
 
-      {/* 14. Interactive Booking Modal System (PRD Section 8) */}
-      <BookingModal
-        isOpen={bookingModalOpen}
-        onClose={() => setBookingModalOpen(false)}
-        initialService={selectedServiceForBooking}
-      />
-
-      {/* 15. Floating Instant WhatsApp Action */}
+      {/* 13. Floating Instant WhatsApp Action */}
       <FloatingWhatsApp />
 
-      {/* 16. Live Activity Social Proof Notifications */}
-      <SocialProofPopup onOpenBooking={(s) => handleOpenBooking(s)} />
+      {/* 14. Live Activity Social Proof Notifications */}
+      <SocialProofPopup
+        onOpenBooking={(service) =>
+          openWhatsApp(
+            `Halo ${brandName}, saya melihat baru saja ada pemesanan untuk layanan ${
+              service || "Digital Solution"
+            }. Saya tertarik juga, mohon info paketnya!`,
+            waNumber
+          )
+        }
+      />
     </div>
   );
 }

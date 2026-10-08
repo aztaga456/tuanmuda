@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import { useContent } from "@/context/ContentContext";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function Footer() {
   const { content } = useContent();
@@ -62,7 +63,10 @@ export default function Footer() {
                 <div>
                   <span className="font-bold text-white">WhatsApp Studio:</span>{" "}
                   <a
-                    href={`https://wa.me/${brand?.whatsappNumber || "6281234567890"}`}
+                    href={getWhatsAppUrl(
+                      `Halo ${brand?.name || "TUANMUDA"}, saya ingin menghubungi Studio via WhatsApp.`,
+                      brand?.whatsappNumber
+                    )}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sky-300 hover:text-sky-200 hover:underline font-mono font-bold"

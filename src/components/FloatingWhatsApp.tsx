@@ -1,19 +1,24 @@
 "use client";
 
 import { useContent } from "@/context/ContentContext";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function FloatingWhatsApp() {
   const { content } = useContent();
-  const waNumber = content?.brand?.whatsappNumber || "6281234567890";
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex items-center gap-3">
       {/* WhatsApp Button */}
       <a
-        href={`https://wa.me/${waNumber}?text=Halo%20TUANMUDA,%20saya%20ingin%20tanya%20layanan%20kreatif%20dan%20digital`}
+        href={getWhatsAppUrl(
+          `Halo ${brandName}, saya ingin tanya seputar layanan kreatif & solusi digital untuk bisnis saya.`,
+          waNumber
+        )}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Hubungi WhatsApp TUANMUDA"
+        aria-label={`Hubungi WhatsApp ${brandName}`}
         className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 relative group cursor-pointer"
       >
         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-300 border-2 border-white animate-ping"></span>

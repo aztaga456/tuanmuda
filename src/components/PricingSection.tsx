@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { useContent } from "@/context/ContentContext";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface PricingSectionProps {
   onSelectPlan: (planName: string, serviceType: string) => void;
@@ -11,6 +12,8 @@ interface PricingSectionProps {
 export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
   const { content } = useContent();
   const pricingData = content?.pricing;
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1, rootMargin: "0px 0px -50px 0px", triggerOnce: false });
   // Website model toggle: "lepas" (Beli Lepas / Sekali Beli) vs "langganan" (Langganan Hemat)
@@ -632,7 +635,10 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
                 </p>
               </div>
               <a
-                href="https://wa.me/6281234567890?text=Halo%20TUANMUDA,%20saya%20ingin%20konsultasi%20paket%20custom%20kelola%20sosial%20media"
+                href={getWhatsAppUrl(
+                  `Halo ${brandName}, saya ingin konsultasi paket custom kelola sosial media sesuai kebutuhan khusus bisnis saya.`,
+                  waNumber
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-2.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shrink-0 shadow-md transition-all text-center"

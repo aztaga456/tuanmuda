@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useContent } from "@/context/ContentContext";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function FaqSection() {
+  const { content } = useContent();
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
+
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqs = [
@@ -103,7 +109,10 @@ export default function FaqSection() {
             <div className="text-xs text-indigo-700 mt-0.5">Tim konsultan kami di Selong siap menjawab kapan saja.</div>
           </div>
           <a
-            href="https://wa.me/6281234567890?text=Halo%20TUANMUDA,%20saya%20punya%20pertanyaan%20seputar%20layanan"
+            href={getWhatsAppUrl(
+              `Halo ${brandName}, saya punya pertanyaan khusus seputar layanan & solusi digital untuk bisnis saya.`,
+              waNumber
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-gradient-cta px-6 py-2.5 rounded-full text-xs font-bold text-white shrink-0 shadow-md"

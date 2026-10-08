@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useInView } from "@/hooks/useInView";
 import { useContent } from "@/context/ContentContext";
 import { getSafeImageUrl } from "@/lib/image-helper";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface ExtensionItem {
   id: string;
@@ -22,9 +23,11 @@ interface ExtensionsSectionProps {
   onSelectExtension?: (title: string) => void;
 }
 
-export default function ExtensionsSection({}: ExtensionsSectionProps) {
+export default function ExtensionsSection({ onSelectExtension }: ExtensionsSectionProps) {
   const { content } = useContent();
   const extData = content?.extensions;
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });
   const [activeModal, setActiveModal] = useState<ExtensionItem | null>(null);
@@ -207,25 +210,27 @@ export default function ExtensionsSection({}: ExtensionsSectionProps) {
                 </h3>
               </div>
 
-              {/* Action Button: Detail */}
+              {/* Action Button: Direct WhatsApp Consultation */}
               <div className="w-full pt-3 mt-3 border-t border-slate-100 px-1">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveModal(item);
+                    if (onSelectExtension) {
+                      onSelectExtension(item.title);
+                    } else if (typeof window !== "undefined") {
+                      window.open(
+                        getWhatsAppUrl(
+                          `Halo ${brandName}, saya tertarik dan ingin konsultasi mengenai program: ${item.title}. Mohon info penawaran dan jadwalnya.`,
+                          waNumber
+                        ),
+                        "_blank"
+                      );
+                    }
                   }}
-                  className="w-full py-2.5 px-4 rounded-xl bg-slate-50 group-hover:bg-indigo-600 text-slate-700 group-hover:text-white border border-slate-200/80 group-hover:border-indigo-600 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-600 text-white border border-slate-900 hover:border-emerald-600 text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
                 >
-                  <span>Lihat Detail</span>
-                  <svg
-                    className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
+                  <span>Konsultasi via WA →</span>
                 </button>
               </div>
             </div>
@@ -318,9 +323,10 @@ export default function ExtensionsSection({}: ExtensionsSectionProps) {
             {/* Action Button: WhatsApp Direct Link (Directs to WhatsApp, NOT form) */}
             <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
               <a
-                href={`https://wa.me/6281234567890?text=${encodeURIComponent(
-                  `Halo TUANMUDA, saya ingin menanyakan info detail & konsultasi mengenai program: ${activeModal.title}`
-                )}`}
+                href={getWhatsAppUrl(
+                  `Halo ${brandName}, saya ingin menanyakan info detail & konsultasi mengenai program: ${activeModal.title}`,
+                  waNumber
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2.5 transition-all cursor-pointer text-center"

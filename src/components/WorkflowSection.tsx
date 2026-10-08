@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { useContent } from "@/context/ContentContext";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function WorkflowSection() {
   const { content } = useContent();
   const workflowData = content?.workflow;
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });
   const [activeStep, setActiveStep] = useState<number>(0);
@@ -206,7 +209,10 @@ export default function WorkflowSection() {
           </div>
 
           <a
-            href="https://wa.me/6281234567890?text=Halo%20TUANMUDA,%20saya%20ingin%20konsultasi%20tahapan%20project%20baru"
+            href={getWhatsAppUrl(
+              `Halo ${brandName}, saya ingin konsultasi tahapan pengerjaan project baru (${activeSteps[activeStep % activeSteps.length]?.step} - ${activeSteps[activeStep % activeSteps.length]?.title}). Mohon panduan alurnya.`,
+              waNumber
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-blue-pill px-6 py-3 rounded-xl text-xs sm:text-sm font-bold text-white shrink-0 shadow-md text-center"

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useInView } from "@/hooks/useInView";
 import { useContent } from "@/context/ContentContext";
 import { getSafeImageUrl } from "@/lib/image-helper";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface PortfolioItem {
   id: string;
@@ -24,6 +25,8 @@ interface PortfolioItem {
 export default function PortfolioSection() {
   const { content } = useContent();
   const portData = content?.portfolio;
+  const brandName = content?.brand?.name || "TUANMUDA";
+  const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });
   const [activeFilter, setActiveFilter] = useState<string>("Semua");
@@ -335,9 +338,10 @@ export default function PortfolioSection() {
 
             <div className="mt-8 pt-5 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
               <a
-                href={`https://wa.me/6281234567890?text=Halo%20TUANMUDA,%20saya%20tertarik%20dengan%20studi%20kasus%20project%20${encodeURIComponent(
-                  selectedProject.title
-                )}.%20Bisa%20diskusi%20untuk%20bisnis%20saya?`}
+                href={getWhatsAppUrl(
+                  `Halo ${brandName}, saya tertarik dengan studi kasus project ${selectedProject.title} (${selectedProject.client}). Bisa diskusi untuk solusi serupa pada bisnis saya?`,
+                  waNumber
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gradient-cta flex-1 py-3.5 rounded-xl font-bold text-white text-center text-sm shadow-md"
