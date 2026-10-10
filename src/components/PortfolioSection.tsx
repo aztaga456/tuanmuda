@@ -339,7 +339,7 @@ export default function PortfolioSection() {
             <div className="mt-8 pt-5 border-t border-slate-200 flex flex-col sm:flex-row gap-3">
               <a
                 href={getWhatsAppUrl(
-                  `Halo ${brandName}, saya tertarik dengan studi kasus project ${selectedProject.title} (${selectedProject.client}). Bisa diskusi untuk solusi serupa pada bisnis saya?`,
+                  `Halo ${brandName}, saya tertarik dengan studi kasus project *${selectedProject.title}* (${selectedProject.client}). Bisa diskusi untuk solusi serupa pada bisnis saya?`,
                   waNumber
                 )}
                 target="_blank"

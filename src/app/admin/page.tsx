@@ -621,10 +621,10 @@ export default function AdminPage() {
                   </div>
 
                   {/* Logo Image Upload / URL */}
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Ganti dengan Gambar Logo (File / URL)
-                    </label>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                        Ganti Gambar Logo Icon (File / URL) <span className="text-[10px] text-indigo-400 font-normal">(Mengganti ikon kotak, teks brand tetap utuh)</span>
+                      </label>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -696,52 +696,74 @@ export default function AdminPage() {
                     {/* Dark Background Preview (Tampilan Header) */}
                     <div className="p-3.5 rounded-xl bg-[#07091E] border border-white/10 flex flex-col items-center justify-center min-h-[90px] relative">
                       <span className="text-[9px] uppercase font-bold text-slate-500 absolute top-2 left-2">Background Gelap (Header)</span>
-                      {content.brand.logoImage ? (
-                        <img
-                          src={getSafeImageUrl(content.brand.logoImage)}
-                          alt="Preview Logo Dark"
-                          className="max-h-12 max-w-[200px] object-contain my-2"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            const img = e.currentTarget;
-                            if (!img.dataset.fallback && content.brand.logoImage) {
-                              img.dataset.fallback = "true";
-                              img.src = `https://wsrv.nl/?url=${encodeURIComponent(content.brand.logoImage)}`;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 my-2">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center text-white font-black text-sm">
-                            {content.brand.emblemText || "TM"}
+                      <div className="flex items-center gap-2.5 my-2">
+                        {content.brand.logoImage ? (
+                          <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center p-1 bg-gradient-to-tr from-slate-900/80 to-slate-800/80 border border-white/20 shadow-md shrink-0">
+                            <img
+                              src={getSafeImageUrl(content.brand.logoImage)}
+                              alt="Preview Logo Icon Dark"
+                              className="w-full h-full object-contain"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                const img = e.currentTarget;
+                                if (!img.dataset.fallback && content.brand.logoImage) {
+                                  img.dataset.fallback = "true";
+                                  img.src = `https://wsrv.nl/?url=${encodeURIComponent(content.brand.logoImage)}`;
+                                }
+                              }}
+                            />
                           </div>
-                          <span className="font-bold text-white text-base">
-                            {content.brand.logoText1}{content.brand.logoText2}
+                        ) : (
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center text-white font-black text-sm shadow-md shrink-0 border border-white/25">
+                            {content.brand.emblemText || "LX"}
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <div className="text-base sm:text-lg font-black tracking-tight leading-none text-white">
+                            <span>{content.brand.logoText1}</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-pink-400">
+                              {content.brand.logoText2}
+                            </span>
+                            <span className="text-pink-500">.</span>
+                          </div>
+                          <span className="text-[7.5px] font-extrabold tracking-[0.2em] text-slate-400 uppercase mt-0.5">
+                            {content.brand.subtitle || "DIGITAL SOLUTION"}
                           </span>
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Light Background Preview (Cek Transparansi / Footer / Surat) */}
                     <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-300 flex flex-col items-center justify-center min-h-[90px] relative">
                       <span className="text-[9px] uppercase font-bold text-slate-500 absolute top-2 left-2">Background Terang (Cek Transparansi)</span>
-                      {content.brand.logoImage ? (
-                        <img
-                          src={getSafeImageUrl(content.brand.logoImage)}
-                          alt="Preview Logo Light"
-                          className="max-h-12 max-w-[200px] object-contain my-2"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 my-2">
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center text-white font-black text-sm">
-                            {content.brand.emblemText || "TM"}
+                      <div className="flex items-center gap-2.5 my-2">
+                        {content.brand.logoImage ? (
+                          <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center p-1 bg-white border border-slate-200 shadow-xs shrink-0">
+                            <img
+                              src={getSafeImageUrl(content.brand.logoImage)}
+                              alt="Preview Logo Icon Light"
+                              className="w-full h-full object-contain"
+                              referrerPolicy="no-referrer"
+                            />
                           </div>
-                          <span className="font-bold text-slate-900 text-base">
-                            {content.brand.logoText1}{content.brand.logoText2}
+                        ) : (
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center text-white font-black text-sm shadow-xs shrink-0 border border-white/20">
+                            {content.brand.emblemText || "LX"}
+                          </div>
+                        )}
+                        <div className="flex flex-col">
+                          <div className="text-base sm:text-lg font-black tracking-tight leading-none text-slate-900">
+                            <span>{content.brand.logoText1}</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 via-indigo-500 to-pink-500">
+                              {content.brand.logoText2}
+                            </span>
+                            <span className="text-pink-500">.</span>
+                          </div>
+                          <span className="text-[7.5px] font-extrabold tracking-[0.2em] text-slate-500 uppercase mt-0.5">
+                            {content.brand.subtitle || "DIGITAL SOLUTION"}
                           </span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -773,7 +795,7 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Nomor WhatsApp (format internasional, cth: 6281234567890)
+                      Nomor WhatsApp (format internasional, cth: 6285955343737)
                     </label>
                     <input
                       type="text"
@@ -790,7 +812,7 @@ export default function AdminPage() {
 
                   <div>
                     <label className="block text-xs font-medium text-slate-400 mb-1">
-                      WhatsApp Tampilan (cth: +62 812-3456-7890)
+                      WhatsApp Tampilan (cth: +62 859-5534-3737)
                     </label>
                     <input
                       type="text"

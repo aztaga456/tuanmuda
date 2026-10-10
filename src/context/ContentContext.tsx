@@ -20,6 +20,12 @@ export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined
   if (!brandData.emblemText || brandData.emblemText === "TM") {
     brandData.emblemText = "LX";
   }
+  if (!brandData.whatsappNumber || brandData.whatsappNumber === "6281234567890") {
+    brandData.whatsappNumber = "6285955343737";
+  }
+  if (!brandData.whatsappDisplay || brandData.whatsappDisplay === "+62 812-3456-7890") {
+    brandData.whatsappDisplay = "+62 859-5534-3737";
+  }
 
   const rawServicesBar = { ...defaultSiteContent.servicesBar, ...(parsed.servicesBar || {}) };
   if (rawServicesBar.badge?.includes("TUANMUDA")) {

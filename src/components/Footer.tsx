@@ -71,7 +71,7 @@ export default function Footer() {
                     rel="noopener noreferrer"
                     className="text-sky-300 hover:text-sky-200 hover:underline font-mono font-bold"
                   >
-                    {brand?.whatsappDisplay || "+62 812-3456-7890"}
+                    {brand?.whatsappDisplay || "+62 859-5534-3737"}
                   </a>
                 </div>
               </div>

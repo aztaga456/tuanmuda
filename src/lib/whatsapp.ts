@@ -6,14 +6,14 @@
 
 export function cleanWhatsAppNumber(phone?: string | null): string {
   if (!phone || typeof phone !== "string") {
-    return "6281234567890";
+    return "6285955343737";
   }
 
   // Strip all non-digit characters (spaces, dashes, plus signs, brackets)
   let cleaned = phone.replace(/\D/g, "");
 
-  if (!cleaned) {
-    return "6281234567890";
+  if (!cleaned || cleaned === "6281234567890") {
+    return "6285955343737";
   }
 
   // Indonesian local formats handling:

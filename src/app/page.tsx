@@ -28,7 +28,7 @@ export default function Home() {
       <Navbar
         onOpenBooking={() =>
           openWhatsApp(
-            `Halo ${brandName}, saya ingin konsultasi gratis mengenai layanan digital & solusi bisnis Anda.`,
+            `Halo ${brandName}, saya ingin konsultasi gratis mengenai kebutuhan digital & solusi bisnis saya.`,
             waNumber
           )
         }
@@ -39,7 +39,7 @@ export default function Home() {
         <HeroSection
           onOpenBooking={() =>
             openWhatsApp(
-              `Halo ${brandName}, saya ingin mulai konsultasi pembuatan website / branding untuk bisnis saya.`,
+              `Halo ${brandName}, saya ingin mulai konsultasi pembuatan website & strategi pemasaran digital untuk bisnis saya.`,
               waNumber
             )
           }
@@ -49,7 +49,7 @@ export default function Home() {
         <ServicesBar
           onSelectService={(service) =>
             openWhatsApp(
-              `Halo ${brandName}, saya tertarik dengan layanan ${service}. Mohon informasi detail paket dan alur pengerjaannya.`,
+              `Halo ${brandName}, saya tertarik dengan layanan *${service}*. Mohon informasi detail paket, estimasi biaya, dan alur pengerjaannya.`,
               waNumber
             )
           }
@@ -59,13 +59,13 @@ export default function Home() {
         <WhyUsSection
           onOpenBooking={() =>
             openWhatsApp(
-              `Halo ${brandName}, saya ingin jadwalkan konsultasi langsung dengan tim profesional Anda mengenai kebutuhan digital bisnis saya.`,
+              `Halo ${brandName}, saya ingin jadwalkan sesi konsultasi langsung dengan tim studio Selong mengenai strategi digital bisnis saya.`,
               waNumber
             )
           }
           onFilterService={(category) =>
             openWhatsApp(
-              `Halo ${brandName}, saya ingin tanya solusi digital kategori ${category} untuk bisnis saya.`,
+              `Halo ${brandName}, saya ingin tanya solusi digital kategori *${category}* untuk bisnis saya.`,
               waNumber
             )
           }
@@ -73,19 +73,28 @@ export default function Home() {
 
         {/* 5. Packages & Pricing */}
         <PricingSection
-          onSelectPlan={(plan, svc) =>
-            openWhatsApp(
-              `Halo ${brandName}, saya ingin pesan / konsultasi Paket ${svc} - ${plan}. Mohon informasi detail dan proses pemesanannya.`,
-              waNumber
-            )
-          }
+          onSelectPlan={(plan, svc) => {
+            let msg = `Halo ${brandName}, saya ingin memesan / konsultasi Paket *${svc} - ${plan}*. Mohon informasi detail dan proses pemesanannya.`;
+            if (svc.toLowerCase().includes("web")) {
+              msg = `Halo ${brandName}, saya ingin memesan / konsultasi Paket *Website - ${plan}*. Mohon informasi ketersediaan slot dan proses pemesanannya.`;
+            } else if (svc.toLowerCase().includes("sosmed") || svc.toLowerCase().includes("sosial media")) {
+              msg = `Halo ${brandName}, saya tertarik memesan Paket *Kelola Sosial Media - ${plan}*. Mohon informasi detail jadwal konten dan langkah awalnya.`;
+            } else if (svc.toLowerCase().includes("video")) {
+              msg = `Halo ${brandName}, saya ingin memesan Paket *Video & Image Ads - ${plan}*. Mohon info konsep materi dan alur produksinya.`;
+            } else if (svc.toLowerCase().includes("meta")) {
+              msg = `Halo ${brandName}, saya ingin menjalankan kampanye iklan melalui Paket *Meta Ads - ${plan}*. Mohon arahan target audiens dan persiapannya.`;
+            } else if (svc.toLowerCase().includes("seo")) {
+              msg = `Halo ${brandName}, saya ingin memesan Paket *Optimasi SEO - ${plan}*. Mohon analisis kata kunci dan alur optimasinya.`;
+            }
+            openWhatsApp(msg, waNumber);
+          }}
         />
 
         {/* 6. Extension Services */}
         <ExtensionsSection
           onSelectExtension={(ext) =>
             openWhatsApp(
-              `Halo ${brandName}, saya tertarik dan ingin konsultasi mengenai program: ${ext}. Mohon info penawaran dan jadwalnya.`,
+              `Halo ${brandName}, saya tertarik dan ingin konsultasi mengenai program *${ext}*. Mohon info penawaran dan jadwal pelaksanaannya.`,
               waNumber
             )
           }
@@ -98,9 +107,9 @@ export default function Home() {
         <UmkmPromoBanner
           onOpenBooking={(serviceName) =>
             openWhatsApp(
-              `Halo ${brandName}, saya ingin klaim Promo Diskon Khusus UMKM untuk layanan ${
+              `Halo ${brandName}, saya pelaku UMKM dan ingin klaim *Promo Diskon UMKM 15-20%* untuk layanan *${
                 serviceName || "Website UMKM"
-              }. Mohon dibantu proses dan info slotnya!`,
+              }*. Mohon dibantu proses dan info slotnya!`,
               waNumber
             )
           }
@@ -116,7 +125,7 @@ export default function Home() {
         <CtaBanner
           onOpenBooking={() =>
             openWhatsApp(
-              `Halo ${brandName}, saya siap berkolaborasi untuk mengembangkan proyek digital bisnis saya! Saya ingin booking sesi konsultasi.`,
+              `Halo ${brandName}, saya siap mengembangkan bisnis bersama tim ${brandName}! Saya ingin booking sesi konsultasi sekarang.`,
               waNumber
             )
           }
@@ -133,9 +142,9 @@ export default function Home() {
       <SocialProofPopup
         onOpenBooking={(service) =>
           openWhatsApp(
-            `Halo ${brandName}, saya melihat baru saja ada pemesanan untuk layanan ${
-              service || "Digital Solution"
-            }. Saya tertarik juga, mohon info paketnya!`,
+            `Halo ${brandName}, saya melihat baru saja ada pemesanan untuk layanan *${
+              service || "Solusi Digital"
+            }*. Saya tertarik juga untuk bisnis saya, mohon info paketnya!`,
             waNumber
           )
         }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useContent } from "@/context/ContentContext";
+import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ export default function BookingModal({
   initialService = "Website - Landing Page",
 }: BookingModalProps) {
   const { content } = useContent();
-  const waNumber = content?.brand?.whatsappNumber || "6281234567890";
+  const waNumber = content?.brand?.whatsappNumber || "6285955343737";
 
   const [service, setService] = useState(initialService);
   const [name, setName] = useState("");
@@ -77,8 +78,7 @@ export default function BookingModal({
 ---------------------------------------
 Halo tim lomboXtudio, saya ingin mendiskusikan kebutuhan project di atas. Terima kasih!`;
 
-    const encoded = encodeURIComponent(text);
-    const waUrl = `https://wa.me/${waNumber}?text=${encoded}`;
+    const waUrl = getWhatsAppUrl(text, waNumber);
 
     setSubmitted(true);
 

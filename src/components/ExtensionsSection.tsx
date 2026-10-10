@@ -221,7 +221,7 @@ export default function ExtensionsSection({ onSelectExtension }: ExtensionsSecti
                     } else if (typeof window !== "undefined") {
                       window.open(
                         getWhatsAppUrl(
-                          `Halo ${brandName}, saya tertarik dan ingin konsultasi mengenai program: ${item.title}. Mohon info penawaran dan jadwalnya.`,
+                          `Halo ${brandName}, saya tertarik dan ingin konsultasi mengenai program *${item.title}*. Mohon info penawaran dan jadwal pelaksanaannya.`,
                           waNumber
                         ),
                         "_blank"
@@ -324,7 +324,7 @@ export default function ExtensionsSection({ onSelectExtension }: ExtensionsSecti
             <div className="mt-6 pt-5 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
               <a
                 href={getWhatsAppUrl(
-                  `Halo ${brandName}, saya ingin menanyakan info detail & konsultasi mengenai program: ${activeModal.title}`,
+                  `Halo ${brandName}, saya ingin menanyakan info detail & konsultasi mengenai program *${activeModal.title}*.`,
                   waNumber
                 )}
                 target="_blank"
