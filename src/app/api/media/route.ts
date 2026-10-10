@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractGdriveFileId } from "@/lib/image-helper";
+import { prisma } from "@/lib/db";
 import fs from "fs";
 import path from "path";
 
@@ -16,6 +17,58 @@ export async function GET(req: NextRequest) {
     const target = rawUrl || rawId;
     if (!target) {
       return NextResponse.json({ error: "Parameter 'id' atau 'url' wajib disertakan" }, { status: 400 });
+    }
+
+    // 0. Dukungan Media dari Database Neon PostgreSQL (Prisma)
+    if (process.env.DATABASE_URL && prisma && (rawId || target)) {
+      const cacheKey = rawId || target;
+      const memHit = memoryCache.get(cacheKey);
+      if (memHit && Date.now() - memHit.cachedAt < CACHE_TTL_MS) {
+        return new Response(new Uint8Array(memHit.buffer), {
+          status: 200,
+          headers: {
+            "Content-Type": memHit.contentType,
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "X-Media-Cache": "HIT-MEM",
+          },
+        });
+      }
+
+      try {
+        const record = await prisma.media.findFirst({
+          where: {
+            OR: [
+              ...(rawId ? [{ id: rawId }] : []),
+              ...(rawUrl ? [{ url: rawUrl }] : []),
+              { filename: path.basename(target) },
+            ],
+          },
+        });
+
+        if (record && record.path && record.path.startsWith("data:")) {
+          const base64Index = record.path.indexOf(",");
+          const base64Str = base64Index !== -1 ? record.path.slice(base64Index + 1) : record.path;
+          const buffer = Buffer.from(base64Str, "base64");
+          const contentType = record.mimeType || "image/png";
+
+          if (memoryCache.size > 200) {
+            const firstKey = memoryCache.keys().next().value;
+            if (firstKey) memoryCache.delete(firstKey);
+          }
+          memoryCache.set(cacheKey, { buffer, contentType, cachedAt: Date.now() });
+
+          return new Response(new Uint8Array(buffer), {
+            status: 200,
+            headers: {
+              "Content-Type": contentType,
+              "Cache-Control": "public, max-age=31536000, immutable",
+              "X-Media-Source": "database",
+            },
+          });
+        }
+      } catch (dbErr) {
+        console.warn("[Media API] DB media query notice:", dbErr);
+      }
     }
 
     // 1. Dukungan file lokal di /uploads/...

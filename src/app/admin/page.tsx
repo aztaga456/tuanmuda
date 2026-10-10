@@ -123,8 +123,8 @@ export default function AdminPage() {
     setIsAuthenticated(false);
   };
 
-  // Upload file asli ke Storage Cloud (ImgBB / Google Drive / Local)
-  const handleFileUpload = async (
+  // Memproses file gambar lokal secara instan langsung ke Data URL (Zero Storage dependency)
+  const handleFileUpload = (
     e: React.ChangeEvent<HTMLInputElement>,
     onSuccess: (url: string) => void,
     oldUrl?: string
@@ -132,58 +132,87 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      alert("Ukuran gambar maksimal 10MB.");
+    if (file.size > 15 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 15MB.");
       return;
     }
 
-    // 1. Tampilkan pratinjau lokal seketika (Zero Latency Instant Preview)
-    try {
-      const localPreviewUrl = URL.createObjectURL(file);
-      onSuccess(localPreviewUrl);
-      setHasUnsyncedChanges(true);
-    } catch {}
-
     setIsUploading(true);
-    showToast("Mengunggah gambar ke Cloud Storage...");
+    showToast("Memproses file gambar lokal...");
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+    const reader = new FileReader();
+    reader.onerror = () => {
+      setIsUploading(false);
+      alert("Gagal membaca file dari penyimpanan lokal.");
+    };
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+    reader.onload = (uploadEvent) => {
+      const rawDataUrl = uploadEvent.target?.result as string;
+      if (!rawDataUrl) {
+        setIsUploading(false);
+        return;
+      }
 
-      const data = await res.json();
-      if (data.success && data.url) {
-        // 2. Ganti URL blob dengan URL cloud permanen
-        onSuccess(data.url);
+      // Jika file SVG atau gambar sudah ringan (< 400KB), gunakan langsung
+      if (file.type === "image/svg+xml" || file.size < 400 * 1024) {
+        onSuccess(rawDataUrl);
         setHasUnsyncedChanges(true);
+        setIsUploading(false);
+        showToast("✅ Gambar lokal berhasil dimuat & siap disimpan!");
+        e.target.value = "";
+        return;
+      }
 
-        // Jika ada gambar lama yang diganti, catat untuk dihapus saat sinkronisasi
-        if (
-          oldUrl &&
-          !oldUrl.startsWith("blob:") &&
-          (oldUrl.includes("googleusercontent.com") ||
-            oldUrl.includes("drive.google.com") ||
-            oldUrl.startsWith("/uploads/"))
-        ) {
-          setReplacedUrls((prev) => Array.from(new Set([...prev, oldUrl])));
+      // Untuk gambar raster besar, resize proporsional agar ultra ringan (< 150KB) & hemat database
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const maxDim = 1200;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const targetFormat = file.type === "image/png" ? "image/png" : "image/webp";
+            const optimizedDataUrl = canvas.toDataURL(targetFormat, 0.88);
+            onSuccess(optimizedDataUrl);
+          } else {
+            onSuccess(rawDataUrl);
+          }
+        } catch {
+          onSuccess(rawDataUrl);
         }
 
-        showToast("✅ Gambar berhasil diunggah & siap disimpan!");
-      } else {
-        alert("Gagal mengunggah file: " + (data.error || "Cek koneksi internet"));
-      }
-    } catch (err: any) {
-      console.error("Upload error:", err);
-      alert("Terjadi kesalahan jaringan saat mengunggah: " + err.message);
-    } finally {
-      setIsUploading(false);
-      e.target.value = "";
-    }
+        setHasUnsyncedChanges(true);
+        setIsUploading(false);
+        showToast("✅ Gambar lokal berhasil dimuat & siap disimpan!");
+        e.target.value = "";
+      };
+
+      img.onerror = () => {
+        onSuccess(rawDataUrl);
+        setHasUnsyncedChanges(true);
+        setIsUploading(false);
+        showToast("✅ Gambar lokal berhasil dimuat & siap disimpan!");
+        e.target.value = "";
+      };
+
+      img.src = rawDataUrl;
+    };
+
+    reader.readAsDataURL(file);
   };
 
   // Simpan & Sinkronkan langsung ke Cloud Database dan bersihkan gambar usang di storage

@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { saveUploadedFile } from "@/lib/storage";
-import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,43 +12,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Batas ukuran 5MB untuk gambar
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 10 * 1024 * 1024) {
       return NextResponse.json(
-        { success: false, error: "Ukuran file maksimal 5MB" },
+        { success: false, error: "Ukuran file maksimal 10MB" },
         { status: 400 }
       );
     }
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
-    // Simpan ke storage (lokal atau cloud)
-    const stored = await saveUploadedFile(buffer, file.name, file.type);
-
-    // Catat metadata ke database jika koneksi DB tersedia
-    try {
-      if (process.env.DATABASE_URL && prisma) {
-        await prisma.media.create({
-          data: {
-            filename: stored.filename,
-            originalName: stored.originalName,
-            mimeType: stored.mimeType,
-            size: stored.size,
-            url: stored.url,
-            path: stored.path,
-          },
-        });
-      }
-    } catch (dbErr) {
-      console.warn("Media DB record skipped (DB offline):", dbErr);
-    }
+    const mimeType = file.type || "image/png";
+    const dataUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
 
     return NextResponse.json({
       success: true,
-      url: stored.url,
-      filename: stored.filename,
-      size: stored.size,
+      url: dataUrl,
+      filename: file.name,
+      size: file.size,
     });
   } catch (err: any) {
     console.error("Upload error:", err);
