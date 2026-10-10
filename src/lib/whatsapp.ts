@@ -1,5 +1,5 @@
 /**
- * WhatsApp Helper Utilities for TUANMUDA Digital Solution
+ * WhatsApp Helper Utilities for lomboXtudio Digital Solution
  * Ensures all customer inquiries route directly to the admin-configured WhatsApp number
  * with properly sanitized international format and tailored contextual pre-filled messages.
  */

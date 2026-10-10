@@ -22,9 +22,9 @@ export default function Logo({ className = "", variant = "white", subtitle }: Lo
   }, [brand?.logoImage]);
 
   const displaySubtitle = subtitle || brand?.subtitle || "DIGITAL SOLUTION";
-  const logoText1 = brand?.logoText1 || "TUAN";
-  const logoText2 = brand?.logoText2 || "MUDA";
-  const emblemText = brand?.emblemText || "TM";
+  const logoText1 = brand?.logoText1 || "lombo";
+  const logoText2 = brand?.logoText2 || "Xtudio";
+  const emblemText = brand?.emblemText || "LX";
   const customLogoImage = brand?.logoImage;
 
   const safeLogoUrl = getSafeImageUrl(customLogoImage);

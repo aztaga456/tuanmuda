@@ -5,7 +5,7 @@ import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function FloatingWhatsApp() {
   const { content } = useContent();
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   return (

@@ -12,7 +12,7 @@ interface PricingSectionProps {
 export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
   const { content } = useContent();
   const pricingData = content?.pricing;
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1, rootMargin: "0px 0px -50px 0px", triggerOnce: false });

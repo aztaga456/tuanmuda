@@ -8,7 +8,7 @@ import { getWhatsAppUrl } from "@/lib/whatsapp";
 export default function WorkflowSection() {
   const { content } = useContent();
   const workflowData = content?.workflow;
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });

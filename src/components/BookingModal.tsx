@@ -61,7 +61,7 @@ export default function BookingModal({
     }
 
     // Prepare WhatsApp message
-    const text = `*FORM BOOKING KONSULTASI TUANMUDA*
+    const text = `*FORM BOOKING KONSULTASI lomboXtudio*
 ---------------------------------------
 👤 *Nama:* ${name}
 🏢 *Nama Bisnis:* ${businessName}
@@ -75,7 +75,7 @@ export default function BookingModal({
 🏷️ *Status UMKM:* ${isUmkm ? "Ya (Klaim Diskon UMKM 15-20%)" : "Bukan UMKM"}
 📝 *Catatan / Kebutuhan:* ${notes || "-"}
 ---------------------------------------
-Halo tim TUANMUDA, saya ingin mendiskusikan kebutuhan project di atas. Terima kasih!`;
+Halo tim lomboXtudio, saya ingin mendiskusikan kebutuhan project di atas. Terima kasih!`;
 
     const encoded = encodeURIComponent(text);
     const waUrl = `https://wa.me/${waNumber}?text=${encoded}`;
@@ -296,7 +296,7 @@ Halo tim TUANMUDA, saya ingin mendiskusikan kebutuhan project di atas. Terima ka
               Booking Berhasil Dibuat!
             </h4>
             <p className="text-xs sm:text-sm text-slate-600 max-w-sm mx-auto leading-relaxed">
-              Jendela WhatsApp sedang dibuka untuk menghubungkan Anda langsung dengan tim konsultan TUANMUDA Studio Selong.
+              Jendela WhatsApp sedang dibuka untuk menghubungkan Anda langsung dengan tim konsultan lomboXtudio Studio Selong.
             </p>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-left space-y-1">
               <div><strong>Klien:</strong> {name} ({businessName})</div>

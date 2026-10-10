@@ -422,7 +422,7 @@ export default function HeroSection({ onOpenBooking }: HeroSectionProps) {
                   <div className="relative w-full h-full group">
                     <Image
                       src="/hero-laptop-original.png"
-                      alt="TUANMUDA Creative Agency - Solusi Laptop & Smartphone Marketing"
+                      alt="lomboXtudio Creative Agency - Solusi Laptop & Smartphone Marketing"
                       fill
                       sizes="(max-width: 1024px) 100vw, 480px"
                       priority

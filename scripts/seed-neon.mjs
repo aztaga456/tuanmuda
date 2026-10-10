@@ -1,5 +1,5 @@
 /**
- * Script Seeder Database — NUSADIGITAL / TUANMUDA
+ * Script Seeder Database — lomboXtudio Creative Agency
  * Mengisi data awal ke Neon PostgreSQL:
  * 1. SiteContent (Semua section website default)
  * 2. Akun Admin awal

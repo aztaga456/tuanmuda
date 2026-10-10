@@ -134,7 +134,7 @@ export async function GET() {
     }
 
     const payload = {
-      agency: "NUSADIGITAL / TUANMUDA Creative Agency",
+      agency: "lomboXtudio Creative Agency",
       exportedAt: new Date().toISOString(),
       database: "Neon PostgreSQL",
       storage: process.env.STORAGE_DRIVER || "gdrive",

@@ -26,7 +26,7 @@ interface ExtensionsSectionProps {
 export default function ExtensionsSection({ onSelectExtension }: ExtensionsSectionProps) {
   const { content } = useContent();
   const extData = content?.extensions;
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });
@@ -150,7 +150,7 @@ export default function ExtensionsSection({ onSelectExtension }: ExtensionsSecti
           </h2>
           <p className="text-slate-600 text-sm sm:text-base mt-2.5">
             {extData?.narrative ||
-              "TUANMUDA melengkapi ekosistem bisnis Anda dengan kecerdasan buatan, desain produk fisik, dan aplikasi terintegrasi."}
+              "lomboXtudio melengkapi ekosistem bisnis Anda dengan kecerdasan buatan, desain produk fisik, dan aplikasi terintegrasi."}
           </p>
         </div>
 

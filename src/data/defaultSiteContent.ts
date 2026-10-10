@@ -241,16 +241,16 @@ export interface SiteContent {
 
 export const defaultSiteContent: SiteContent = {
   brand: {
-    name: "TUANMUDA",
-    logoText1: "TUAN",
-    logoText2: "MUDA",
-    emblemText: "TM",
+    name: "lomboXtudio",
+    logoText1: "lombo",
+    logoText2: "Xtudio",
+    emblemText: "LX",
     subtitle: "DIGITAL SOLUTION",
     logoImage: "",
     description: "Official studio kreatif & solusi digital di Selong, Lombok Timur. Membantu UMKM, brand lokal, dan instansi tampil profesional dan bertumbuh nyata di era digital.",
     whatsappNumber: "6281234567890",
     whatsappDisplay: "+62 812-3456-7890",
-    email: "studio@tuanmuda.id",
+    email: "studio@lomboxtudio.my.id",
     studioAddress: "Jl. Tuan Guru Umar No. 18, Selong, Lombok Timur, NTB 83612",
     mapsUrl: "https://maps.google.com/?q=Selong+Lombok+Timur",
     operationalHours: "Senin – Sabtu (08.30 – 17.30 WITA)",
@@ -281,7 +281,7 @@ export const defaultSiteContent: SiteContent = {
   },
 
   servicesBar: {
-    badge: "✦ Solusi Terpadu TUANMUDA",
+    badge: "✦ Solusi Terpadu lomboXtudio",
     title: "Satu Tim, Semua Kebutuhan Digital Anda.",
     narrative: "Layanan end-to-end dengan standar agensi profesional namun tetap ramah di kantong pelaku usaha.",
     items: [
@@ -331,10 +331,10 @@ export const defaultSiteContent: SiteContent = {
   },
 
   whyUs: {
-    badge: "✦ 4 Standar Mutu TUANMUDA",
+    badge: "✦ 4 Standar Mutu lomboXtudio",
     title: "Standar Mutu Nyata untuk",
     titleGradient: "Pertumbuhan Bisnis Anda.",
-    narrative: "Berbekal pengalaman mendampingi puluhan bisnis dan institusi dari Lombok hingga nasional, kami memahami kebutuhan Anda akan hasil yang nyata. Di TUANMUDA, setiap solusi dirancang menyeluruh dengan memadukan sistem berkecepatan tinggi, desain visual berkelas, dan strategi berorientasi penjualan—dieksekusi transparan oleh tim studio in-house bergaransi penuh hingga bisnis Anda bertumbuh optimal.",
+    narrative: "Berbekal pengalaman mendampingi puluhan bisnis dan institusi dari Lombok hingga nasional, kami memahami kebutuhan Anda akan hasil yang nyata. Di lomboXtudio, setiap solusi dirancang menyeluruh dengan memadukan sistem berkecepatan tinggi, desain visual berkelas, dan strategi berorientasi penjualan—dieksekusi transparan oleh tim studio in-house bergaransi penuh hingga bisnis Anda bertumbuh optimal.",
     differentiators: [
       {
         title: "Berpengalaman",
@@ -628,7 +628,7 @@ export const defaultSiteContent: SiteContent = {
   extensions: {
     badge: "✦ Layanan Ekstensi Unggulan",
     title: "Lebih Dari Sekadar Website.",
-    narrative: "TUANMUDA melengkapi ekosistem bisnis Anda dengan kecerdasan buatan, desain produk fisik, dan aplikasi terintegrasi.",
+    narrative: "lomboXtudio melengkapi ekosistem bisnis Anda dengan kecerdasan buatan, desain produk fisik, dan aplikasi terintegrasi.",
     items: [
       {
         id: "workshop-ai",
@@ -838,14 +838,14 @@ export const defaultSiteContent: SiteContent = {
   testimonials: {
     badge: "✦ Suara Klien Kami",
     title: "Kisah Nyata Dari Klien Yang Bertumbuh Bersama Kami.",
-    narrative: "Keberhasilan mitra adalah kebanggaan terbesar studio kami. Simak bagaimana solusi digital TUANMUDA memberikan hasil riil.",
+    narrative: "Keberhasilan mitra adalah kebanggaan terbesar studio kami. Simak bagaimana solusi digital lomboXtudio memberikan hasil riil.",
     items: [
       {
         name: "H. Syamsul Arifin",
         role: "Owner",
         company: "Rinjani Vista Resort & Tour, Senaru",
         rating: 5,
-        content: "Sebelumnya web kami sering error dan tampilan jadul. Setelah di-rebuild oleh tim TUANMUDA, website kelihatan sangat mewah dan cepat. Tamu mancanegara langsung percaya untuk booking direct. Omset reservasi kami melonjak drastis!",
+        content: "Sebelumnya web kami sering error dan tampilan jadul. Setelah di-rebuild oleh tim lomboXtudio, website kelihatan sangat mewah dan cepat. Tamu mancanegara langsung percaya untuk booking direct. Omset reservasi kami melonjak drastis!",
         avatarBg: "bg-blue-600",
         initial: "S",
       },
@@ -854,7 +854,7 @@ export const defaultSiteContent: SiteContent = {
         role: "Founder",
         company: "Aruna Modest Fashion Selong",
         rating: 5,
-        content: "Paket Meta Ads dan video reels TUANMUDA bener-bener ngefek. Penjualan gamis lebaran kemarin closing sampai ribuan pcs, ROAS stabil di atas 5x. Komunikasi timnya juga sangat ramah dan transparan.",
+        content: "Paket Meta Ads dan video reels lomboXtudio bener-bener ngefek. Penjualan gamis lebaran kemarin closing sampai ribuan pcs, ROAS stabil di atas 5x. Komunikasi timnya juga sangat ramah dan transparan.",
         avatarBg: "bg-pink-600",
         initial: "D",
       },
@@ -863,7 +863,7 @@ export const defaultSiteContent: SiteContent = {
         role: "Kepala IT & Kurikulum",
         company: "Sekolah Cendes Selong, NTB",
         rating: 5,
-        content: "Sistem web raport & absensi guru yang dibuatkan sangat mempermudah 85 guru kami. Guru-guru yang awalnya gaptek pun bisa pakai dengan mudah karena interfacenya simpel dan ada video panduan langsung dari mas-mas TUANMUDA.",
+        content: "Sistem web raport & absensi guru yang dibuatkan sangat mempermudah 85 guru kami. Guru-guru yang awalnya gaptek pun bisa pakai dengan mudah karena interfacenya simpel dan ada video panduan langsung dari mas-mas lomboXtudio.",
         avatarBg: "bg-emerald-600",
         initial: "F",
       },

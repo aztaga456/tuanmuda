@@ -4,27 +4,28 @@ import { ContentProvider } from "@/context/ContentContext";
 import { getInitialSiteContent } from "@/lib/get-initial-content";
 
 export const metadata: Metadata = {
-  title: "TUANMUDA — Creative Agency & Digital Growth Studio | Selong, Lombok Timur",
+  title: "lomboXtudio — Creative Agency & Digital Growth Studio | Selong, Lombok Timur",
   description:
     "Official Studio di Selong, Lombok Timur. Jasa pembuatan website profesional, Meta ads & video iklan, kelola sosial media, SEO organik, dan pelatihan AI. Digital Rapi, Hasil Nyata.",
   keywords: [
     "jasa website lombok",
     "agensi digital lombok timur",
-    "tuanmuda selong",
-    "tuanmuda digital",
+    "lomboxtudio selong",
+    "lomboxtudio digital",
+    "lomboxtudio",
     "meta ads lombok",
     "kelola instagram lombok",
     "jasa seo ntb",
     "workshop ai lombok",
     "website umkm",
   ],
-  authors: [{ name: "TUANMUDA Creative Agency" }],
+  authors: [{ name: "lomboXtudio Creative Agency" }],
   openGraph: {
-    title: "TUANMUDA — Creative Agency & Digital Growth Studio",
+    title: "lomboXtudio — Creative Agency & Digital Growth Studio",
     description:
       "Bisnis Anda Layak Tampil Hebat di Dunia Digital. Cepat, terjangkau, dan bergaransi dengan studio fisik di Selong Lombok Timur.",
-    url: "https://tuanmuda.id",
-    siteName: "TUANMUDA",
+    url: "https://www.lomboxtudio.my.id",
+    siteName: "lomboXtudio",
     locale: "id_ID",
     type: "website",
   },

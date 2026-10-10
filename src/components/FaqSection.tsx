@@ -6,7 +6,7 @@ import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function FaqSection() {
   const { content } = useContent();
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
@@ -29,7 +29,7 @@ export default function FaqSection() {
       a: "Caranya sangat mudah. Saat melakukan booking konsultasi, centang opsi 'Saya Pelaku UMKM'. Cukup lampirkan bukti foto tempat/gerai usaha, akun media sosial bisnis, atau nomor NIB jika ada. Tim kami akan langsung memvalidasi dan memotong biaya di proposal/invoice resmi Anda.",
     },
     {
-      q: "Apa saja metode pembayaran yang diterima di TUANMUDA?",
+      q: "Apa saja metode pembayaran yang diterima di lomboXtudio?",
       a: "Kami menerima Transfer Bank (BCA, Mandiri, BRI, BNI), QRIS instan untuk semua e-wallet (GoPay, OVO, Dana, ShopeePay), serta Virtual Account otomatis melalui payment gateway resmi berizin.",
     },
     {
@@ -65,7 +65,7 @@ export default function FaqSection() {
             Pertanyaan yang Sering Diajukan
           </h2>
           <p className="text-slate-600 text-sm sm:text-base mt-2">
-            Jawaban transparan untuk membantu Anda memulai langkah digital bersama TUANMUDA.
+            Jawaban transparan untuk membantu Anda memulai langkah digital bersama lomboXtudio.
           </p>
         </div>
 

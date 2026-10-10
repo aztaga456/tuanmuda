@@ -19,7 +19,7 @@ import { openWhatsApp } from "@/lib/whatsapp";
 
 export default function Home() {
   const { content } = useContent();
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   return (

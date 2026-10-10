@@ -140,7 +140,7 @@ export default function ServicesBar({ onSelectService }: ServicesBarProps) {
       {/* Section Header */}
       <div className="text-center mb-8">
         <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-50 border border-indigo-200/60 text-xs font-semibold text-indigo-700 shadow-sm mb-2">
-          <span>✦</span> {content?.servicesBar?.badge ? content.servicesBar.badge.replace(/^[✦✨★\s]+/, "") : "Solusi Terpadu TUANMUDA"}
+          <span>✦</span> {content?.servicesBar?.badge ? content.servicesBar.badge.replace(/^[✦✨★\s]+/, "") : "Solusi Terpadu lomboXtudio"}
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           {content?.servicesBar?.title || "Satu Tim, Semua Kebutuhan Digital Anda."}

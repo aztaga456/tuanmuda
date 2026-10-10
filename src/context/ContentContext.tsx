@@ -7,10 +7,37 @@ import { isFirebaseConfigured, subscribeToFirebaseContent } from "@/lib/firebase
 export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined): SiteContent {
   if (!parsed || typeof parsed !== "object") return defaultSiteContent;
 
+  const brandData = { ...defaultSiteContent.brand, ...(parsed.brand || {}) };
+  if (!brandData.name || brandData.name === "TUANMUDA") {
+    brandData.name = "lomboXtudio";
+  }
+  if (!brandData.logoText1 || brandData.logoText1 === "TUAN") {
+    brandData.logoText1 = "lombo";
+  }
+  if (!brandData.logoText2 || brandData.logoText2 === "MUDA") {
+    brandData.logoText2 = "Xtudio";
+  }
+  if (!brandData.emblemText || brandData.emblemText === "TM") {
+    brandData.emblemText = "LX";
+  }
+
+  const rawServicesBar = { ...defaultSiteContent.servicesBar, ...(parsed.servicesBar || {}) };
+  if (rawServicesBar.badge?.includes("TUANMUDA")) {
+    rawServicesBar.badge = rawServicesBar.badge.replace(/TUANMUDA/g, "lomboXtudio");
+  }
+
+  const rawWhyUs = { ...defaultSiteContent.whyUs, ...(parsed.whyUs || {}) };
+  if (rawWhyUs.badge?.includes("TUANMUDA")) {
+    rawWhyUs.badge = rawWhyUs.badge.replace(/TUANMUDA/g, "lomboXtudio");
+  }
+  if (rawWhyUs.narrative?.includes("TUANMUDA")) {
+    rawWhyUs.narrative = rawWhyUs.narrative.replace(/TUANMUDA/g, "lomboXtudio");
+  }
+
   return {
     ...defaultSiteContent,
     ...parsed,
-    brand: { ...defaultSiteContent.brand, ...(parsed.brand || {}) },
+    brand: brandData,
     hero: {
       ...defaultSiteContent.hero,
       ...(parsed.hero || {}),
@@ -22,15 +49,13 @@ export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined
         : defaultSiteContent.hero.metrics,
     },
     servicesBar: {
-      ...defaultSiteContent.servicesBar,
-      ...(parsed.servicesBar || {}),
+      ...rawServicesBar,
       items: parsed.servicesBar?.items?.length
         ? parsed.servicesBar.items
         : defaultSiteContent.servicesBar.items,
     },
     whyUs: {
-      ...defaultSiteContent.whyUs,
-      ...(parsed.whyUs || {}),
+      ...rawWhyUs,
       differentiators: parsed.whyUs?.differentiators?.length
         ? parsed.whyUs.differentiators
         : defaultSiteContent.whyUs.differentiators,

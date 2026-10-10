@@ -13,7 +13,7 @@ export default function TestimonialsSection() {
       company: "Rinjani Vista Resort & Tour, Senaru",
       rating: 5,
       content:
-        "Sebelumnya web kami sering error dan tampilan jadul. Setelah di-rebuild oleh tim TUANMUDA, website kelihatan sangat mewah dan cepat. Tamu mancanegara langsung percaya untuk booking direct. Omset reservasi kami melonjak drastis!",
+        "Sebelumnya web kami sering error dan tampilan jadul. Setelah di-rebuild oleh tim lomboXtudio, website kelihatan sangat mewah dan cepat. Tamu mancanegara langsung percaya untuk booking direct. Omset reservasi kami melonjak drastis!",
       avatarBg: "bg-blue-600",
       initial: "S",
     },
@@ -23,7 +23,7 @@ export default function TestimonialsSection() {
       company: "Aruna Modest Fashion Selong",
       rating: 5,
       content:
-        "Paket Meta Ads dan video reels TUANMUDA bener-bener ngefek. Penjualan gamis lebaran kemarin closing sampai ribuan pcs, ROAS stabil di atas 5x. Komunikasi timnya juga sangat ramah dan transparan.",
+        "Paket Meta Ads dan video reels lomboXtudio bener-bener ngefek. Penjualan gamis lebaran kemarin closing sampai ribuan pcs, ROAS stabil di atas 5x. Komunikasi timnya juga sangat ramah dan transparan.",
       avatarBg: "bg-pink-600",
       initial: "D",
     },
@@ -33,7 +33,7 @@ export default function TestimonialsSection() {
       company: "Sekolah Cendes Selong, NTB",
       rating: 5,
       content:
-        "Sistem web raport & absensi guru yang dibuatkan sangat mempermudah 85 guru kami. Guru-guru yang awalnya gaptek pun bisa pakai dengan mudah karena interfacenya simpel dan ada video panduan langsung dari mas-mas TUANMUDA.",
+        "Sistem web raport & absensi guru yang dibuatkan sangat mempermudah 85 guru kami. Guru-guru yang awalnya gaptek pun bisa pakai dengan mudah karena interfacenya simpel dan ada video panduan langsung dari mas-mas lomboXtudio.",
       avatarBg: "bg-emerald-600",
       initial: "F",
     },
@@ -63,7 +63,7 @@ export default function TestimonialsSection() {
       company: "CV Rinjani Agro Mandiri, Lombok Timur",
       rating: 5,
       content:
-        "Rebranding packaging madu hutan dan ekspor web profile kami dipuji buyer nasional. Tim TUANMUDA sangat detail mulai dari pemilihan bahan cetak dieline hingga foto produk 3D katalog. Sangat recommended!",
+        "Rebranding packaging madu hutan dan ekspor web profile kami dipuji buyer nasional. Tim lomboXtudio sangat detail mulai dari pemilihan bahan cetak dieline hingga foto produk 3D katalog. Sangat recommended!",
       avatarBg: "bg-teal-600",
       initial: "H",
     },

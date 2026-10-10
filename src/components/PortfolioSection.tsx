@@ -25,7 +25,7 @@ interface PortfolioItem {
 export default function PortfolioSection() {
   const { content } = useContent();
   const portData = content?.portfolio;
-  const brandName = content?.brand?.name || "TUANMUDA";
+  const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });
@@ -319,7 +319,7 @@ export default function PortfolioSection() {
               </div>
 
               <div>
-                <div className="font-bold text-slate-900 mb-1">Solusi Strategis TUANMUDA:</div>
+                <div className="font-bold text-slate-900 mb-1">Solusi Strategis lomboXtudio:</div>
                 <p className="text-slate-600">{selectedProject.solution}</p>
               </div>
 

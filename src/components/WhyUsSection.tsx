@@ -108,7 +108,7 @@ export default function WhyUsSection({ onOpenBooking }: WhyUsSectionProps) {
             showcaseInView ? "animate-slide-in-left" : "opacity-0"
           }`}>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/60 text-xs font-bold text-indigo-700 shadow-xs">
-              <span className="text-amber-500">✦</span> {whyUsData?.badge ? whyUsData.badge.replace(/^[✦✨★\s]+/, "") : "4 Standar Mutu TUANMUDA"}
+              <span className="text-amber-500">✦</span> {whyUsData?.badge ? whyUsData.badge.replace(/^[✦✨★\s]+/, "") : "4 Standar Mutu lomboXtudio"}
             </div>
 
             <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -122,7 +122,7 @@ export default function WhyUsSection({ onOpenBooking }: WhyUsSectionProps) {
             <p className="text-slate-600 text-sm sm:text-base leading-[1.85] sm:leading-[1.9] pt-1">
               {whyUsData?.narrative || (
                 <>
-                  Berbekal pengalaman mendampingi puluhan bisnis dan institusi dari Lombok hingga nasional, kami memahami kebutuhan Anda akan hasil yang nyata. Di <strong className="font-semibold text-slate-900">TUANMUDA</strong>, setiap solusi dirancang menyeluruh dengan memadukan sistem berkecepatan tinggi, desain visual berkelas, dan strategi berorientasi penjualan—dieksekusi transparan oleh tim studio in-house bergaransi penuh hingga bisnis Anda bertumbuh optimal.
+                  Berbekal pengalaman mendampingi puluhan bisnis dan institusi dari Lombok hingga nasional, kami memahami kebutuhan Anda akan hasil yang nyata. Di <strong className="font-semibold text-slate-900">lomboXtudio</strong>, setiap solusi dirancang menyeluruh dengan memadukan sistem berkecepatan tinggi, desain visual berkelas, dan strategi berorientasi penjualan—dieksekusi transparan oleh tim studio in-house bergaransi penuh hingga bisnis Anda bertumbuh optimal.
                 </>
               )}
             </p>
@@ -142,7 +142,7 @@ export default function WhyUsSection({ onOpenBooking }: WhyUsSectionProps) {
               <div className="relative w-full h-full">
                 <Image
                   src="/hero-laptop-original.png"
-                  alt="Solusi Digital Laptop & Mobile TUANMUDA"
+                  alt="Solusi Digital Laptop & Mobile lomboXtudio"
                   fill
                   sizes="(max-width: 1024px) 100vw, 360px"
                   className="object-contain drop-shadow-[0_16px_30px_rgba(30,27,75,0.16)]"
