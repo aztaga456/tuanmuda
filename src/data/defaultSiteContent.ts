@@ -4,7 +4,8 @@ export interface BrandContent {
   logoText2: string;
   emblemText: string;
   subtitle: string;
-  logoImage?: string;
+  logoImage?: string; // Gambar icon saja
+  fullLogoImage?: string; // Gambar logo lengkap (Icon + Nama brand jadi satu)
   description: string;
   whatsappNumber: string;
   whatsappDisplay: string;
@@ -242,11 +243,12 @@ export interface SiteContent {
 export const defaultSiteContent: SiteContent = {
   brand: {
     name: "lomboXtudio",
-    logoText1: "lombo",
-    logoText2: "Xtudio",
+    logoText1: "lomboXtudio",
+    logoText2: "",
     emblemText: "LX",
     subtitle: "DIGITAL SOLUTION",
     logoImage: "",
+    fullLogoImage: "",
     description: "Official studio kreatif & solusi digital di Selong, Lombok Timur. Membantu UMKM, brand lokal, dan instansi tampil profesional dan bertumbuh nyata di era digital.",
     whatsappNumber: "6285955343737",
     whatsappDisplay: "+62 859-5534-3737",

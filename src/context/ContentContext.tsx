@@ -11,14 +11,30 @@ export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined
   if (!brandData.name || brandData.name === "TUANMUDA") {
     brandData.name = "lomboXtudio";
   }
-  if (!brandData.logoText1 || brandData.logoText1 === "TUAN") {
-    brandData.logoText1 = "lombo";
+  // Hormati nilai teks logo, jangan timpa jika sengaja dikosongkan (empty string "")
+  if (brandData.logoText1 === undefined || brandData.logoText1 === null || brandData.logoText1 === "TUAN") {
+    brandData.logoText1 = "lomboXtudio";
   }
-  if (!brandData.logoText2 || brandData.logoText2 === "MUDA") {
-    brandData.logoText2 = "Xtudio";
+  if (brandData.logoText2 === undefined || brandData.logoText2 === null || brandData.logoText2 === "MUDA") {
+    brandData.logoText2 = "";
+  }
+  // Cegah duplikasi jika logoText1 sudah memuat lomboXtudio dan logoText2 masih terisi Xtudio
+  if (
+    typeof brandData.logoText1 === "string" &&
+    brandData.logoText1.toLowerCase().includes("lomboxtudio") &&
+    typeof brandData.logoText2 === "string" &&
+    brandData.logoText2.toLowerCase() === "xtudio"
+  ) {
+    brandData.logoText2 = "";
   }
   if (!brandData.emblemText || brandData.emblemText === "TM") {
     brandData.emblemText = "LX";
+  }
+  if (parsed.brand?.logoImage !== undefined) {
+    brandData.logoImage = parsed.brand.logoImage;
+  }
+  if (parsed.brand?.fullLogoImage !== undefined) {
+    brandData.fullLogoImage = parsed.brand.fullLogoImage;
   }
   if (!brandData.whatsappNumber || brandData.whatsappNumber === "6281234567890") {
     brandData.whatsappNumber = "6285955343737";
