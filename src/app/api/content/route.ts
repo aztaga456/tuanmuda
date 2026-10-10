@@ -18,10 +18,37 @@ export async function GET() {
   };
 
   try {
-    // 1. Coba ambil dari Firebase Firestore jika terkonfigurasi
+    // 1. Coba ambil dari Neon PostgreSQL (Prisma) terlebih dahulu (Ultra cepat < 50ms)
+    if (process.env.DATABASE_URL && prisma) {
+      try {
+        const record = await prisma.siteContent.findUnique({
+          where: { key: "main" },
+        });
+
+        if (record && record.data) {
+          return NextResponse.json(
+            {
+              success: true,
+              source: "database",
+              version: record.version,
+              updatedAt: record.updatedAt,
+              data: record.data,
+            },
+            { headers }
+          );
+        }
+      } catch (dbErr: any) {
+        console.warn("[Content API] DB query fallback to Firebase:", dbErr?.message);
+      }
+    }
+
+    // 2. Fallback ke Firebase Firestore/RTDB jika DB kosong atau error (timeout max 800ms)
     if (isFirebaseConfigured()) {
       try {
-        const fbContent = await getFirebaseContent();
+        const fbContent = await Promise.race([
+          getFirebaseContent(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 800)),
+        ]);
         if (fbContent) {
           return NextResponse.json(
             {
@@ -33,27 +60,7 @@ export async function GET() {
           );
         }
       } catch (fbErr: any) {
-        console.warn("[Content API] Firebase fetch fallback to Neon:", fbErr.message);
-      }
-    }
-
-    // 2. Fallback ke Neon PostgreSQL (Prisma)
-    if (process.env.DATABASE_URL && prisma) {
-      const record = await prisma.siteContent.findUnique({
-        where: { key: "main" },
-      });
-
-      if (record && record.data) {
-        return NextResponse.json(
-          {
-            success: true,
-            source: "database",
-            version: record.version,
-            updatedAt: record.updatedAt,
-            data: record.data,
-          },
-          { headers }
-        );
+        console.warn("[Content API] Firebase fetch fallback to default:", fbErr?.message);
       }
     }
 
@@ -67,7 +74,7 @@ export async function GET() {
       { headers }
     );
   } catch (err: any) {
-    console.warn("Content GET from database fallback to default:", err.message);
+    console.warn("Content GET from database fallback to default:", err?.message);
     return NextResponse.json(
       {
         success: true,
