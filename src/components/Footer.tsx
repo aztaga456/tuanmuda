@@ -20,7 +20,7 @@ export default function Footer() {
             </div>
 
             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-lg">
-              <strong className="text-white">{brand?.name || "lomboXtudio"} Creative Agency</strong> —{" "}
+              <strong className="text-white">{brand?.name || "lomboXtudio"}</strong> —{" "}
               {brand?.description ||
                 "Official studio kreatif & solusi digital di Selong, Lombok Timur. Membantu UMKM, brand lokal, dan instansi tampil profesional dan bertumbuh nyata di era digital."}
             </p>
@@ -83,7 +83,7 @@ export default function Footer() {
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 text-center sm:text-left">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-1 gap-y-1">
             <span>
-              &copy; {new Date().getFullYear()} {brand?.name || "lomboXtudio"} Creative Agency. Seluruh hak cipta dilindungi undang-undang.
+              &copy; {new Date().getFullYear()} {brand?.name || "lomboXtudio"}. Seluruh hak cipta dilindungi undang-undang.
             </span>
 
             {/* Tombol Admin Transparan (Icon kecil nampak jika diarahkan / hover, atau di-tap di mobile) */}

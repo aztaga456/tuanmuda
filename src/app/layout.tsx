@@ -4,7 +4,7 @@ import { ContentProvider } from "@/context/ContentContext";
 import { getInitialSiteContent } from "@/lib/get-initial-content";
 
 export const metadata: Metadata = {
-  title: "lomboXtudio — Creative Agency & Digital Growth Studio | Selong, Lombok Timur",
+  title: "lomboXtudio — Digital Growth Studio | Selong, Lombok Timur",
   description:
     "Official Studio di Selong, Lombok Timur. Jasa pembuatan website profesional, Meta ads & video iklan, kelola sosial media, SEO organik, dan pelatihan AI. Digital Rapi, Hasil Nyata.",
   keywords: [
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     "workshop ai lombok",
     "website umkm",
   ],
-  authors: [{ name: "lomboXtudio Creative Agency" }],
+  authors: [{ name: "lomboXtudio" }],
   openGraph: {
-    title: "lomboXtudio — Creative Agency & Digital Growth Studio",
+    title: "lomboXtudio — Digital Growth Studio",
     description:
       "Bisnis Anda Layak Tampil Hebat di Dunia Digital. Cepat, terjangkau, dan bergaransi dengan studio fisik di Selong Lombok Timur.",
     url: "https://www.lomboxtudio.my.id",

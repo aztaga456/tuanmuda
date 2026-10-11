@@ -134,7 +134,7 @@ export async function GET() {
     }
 
     const payload = {
-      agency: "lomboXtudio Creative Agency",
+      agency: "lomboXtudio",
       exportedAt: new Date().toISOString(),
       database: "Neon PostgreSQL",
       storage: process.env.STORAGE_DRIVER || "gdrive",
