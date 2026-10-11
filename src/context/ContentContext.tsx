@@ -173,8 +173,24 @@ export function ContentProvider({
   children: React.ReactNode;
   initialContent?: SiteContent;
 }) {
-  const [content, setContent] = useState<SiteContent>(initialContent || defaultSiteContent);
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Ambil state awal secepat mungkin:
+  // Di browser, prioritaskan cache localStorage seketika (Zero Latency Instant Hydration, 0ms delay).
+  // Di server SSR, gunakan initialContent atau defaultSiteContent.
+  const [content, setContent] = useState<SiteContent>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === "object") {
+            return mergeWithDefault(parsed);
+          }
+        }
+      } catch {}
+    }
+    return initialContent ? mergeWithDefault(initialContent) : defaultSiteContent;
+  });
+  const [isLoaded, setIsLoaded] = useState(true);
 
   const saveToStorage = (updated: SiteContent) => {
     try {
@@ -214,26 +230,31 @@ export function ContentProvider({
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Prioritaskan initialContent dari server (langsung dari DB). Jangan timpa dengan cache lokal basi!
-    if (initialContent) {
-      setContent(mergeWithDefault(initialContent));
+    // 1. Cek cache localStorage seketika saat browser mount
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          setContent(mergeWithDefault(parsed));
+          setIsLoaded(true);
+        }
+      }
+    } catch {}
+
+    // 2. Jika initialContent dari server memiliki kustomisasi gambar/logo, terapkan
+    if (
+      initialContent &&
+      (initialContent.brand?.logoImage ||
+        initialContent.brand?.fullLogoImage ||
+        initialContent.brand?.name !== "TUANMUDA")
+    ) {
+      const mergedServer = mergeWithDefault(initialContent);
+      setContent(mergedServer);
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initialContent));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedServer));
       } catch {}
       setIsLoaded(true);
-    } else {
-      // Hanya jika initialContent kosong (misal SSR offline), baca dari localStorage
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setContent(mergeWithDefault(parsed));
-        }
-      } catch (e) {
-        console.error("Failed to load CMS content from localStorage:", e);
-      } finally {
-        setIsLoaded(true);
-      }
     }
 
     // 2. Real-time Listener ke Firebase Firestore

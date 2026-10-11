@@ -247,7 +247,7 @@ export const defaultSiteContent: SiteContent = {
     logoText2: "",
     emblemText: "LX",
     subtitle: "DIGITAL SOLUTION",
-    logoImage: "",
+    logoImage: "/logo-custom.png",
     fullLogoImage: "",
     description: "Official studio kreatif & solusi digital di Selong, Lombok Timur. Membantu UMKM, brand lokal, dan instansi tampil profesional dan bertumbuh nyata di era digital.",
     whatsappNumber: "6285955343737",
