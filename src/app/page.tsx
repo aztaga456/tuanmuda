@@ -17,10 +17,13 @@ import SocialProofPopup from "@/components/SocialProofPopup";
 import { useContent } from "@/context/ContentContext";
 import { openWhatsApp } from "@/lib/whatsapp";
 
+import { useState } from "react";
+
 export default function Home() {
   const { content } = useContent();
   const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
+  const [portfolioCategory, setPortfolioCategory] = useState("Semua");
 
   return (
     <div className="relative min-h-screen bg-[#F8FAFF] text-slate-900 selection:bg-purple-500 selection:text-white">
@@ -73,6 +76,13 @@ export default function Home() {
 
         {/* 5. Packages & Pricing */}
         <PricingSection
+          onViewExamples={(cat) => {
+            setPortfolioCategory(cat || "Web");
+            const el = document.getElementById("portofolio");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth" });
+            }
+          }}
           onSelectPlan={(plan, svc) => {
             let msg = `Halo ${brandName}, saya ingin memesan / konsultasi Paket *${svc} - ${plan}*. Mohon informasi detail dan proses pemesanannya.`;
             if (svc.toLowerCase().includes("web")) {
@@ -101,7 +111,7 @@ export default function Home() {
         />
 
         {/* 7. Featured Portfolio */}
-        <PortfolioSection />
+        <PortfolioSection initialFilter={portfolioCategory} />
 
         {/* 8. UMKM Special Discount Banner */}
         <UmkmPromoBanner

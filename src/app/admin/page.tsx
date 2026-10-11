@@ -3233,6 +3233,7 @@ export default function AdminPage() {
                       image: "/port-resort.jpg",
                       rating: 5,
                       metric: "+150% Omset",
+                      liveUrl: "https://",
                       description: "Deskripsi singkat hasil proyek.",
                       challenge: "Tantangan awal klien sebelum proyek dimulai.",
                       solution: "Solusi kreatif dan teknis yang kami hadirkan.",
@@ -3360,6 +3361,26 @@ export default function AdminPage() {
                           });
                         }}
                         className="admin-input font-bold text-emerald-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                        Link Preview Website (URL Live Demo)
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://contoh-website.com"
+                        value={item.liveUrl || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          updateContent((prev) => {
+                            const updated = [...prev.portfolio.items];
+                            updated[idx] = { ...updated[idx], liveUrl: val };
+                            return { ...prev, portfolio: { ...prev.portfolio, items: updated } };
+                          });
+                        }}
+                        className="admin-input font-mono text-xs text-sky-400"
                       />
                     </div>
 

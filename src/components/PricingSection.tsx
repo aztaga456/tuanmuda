@@ -7,13 +7,29 @@ import { getWhatsAppUrl } from "@/lib/whatsapp";
 
 interface PricingSectionProps {
   onSelectPlan: (planName: string, serviceType: string) => void;
+  onViewExamples?: (category: string) => void;
 }
 
-export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
+export default function PricingSection({ onSelectPlan, onViewExamples }: PricingSectionProps) {
   const { content } = useContent();
   const pricingData = content?.pricing;
   const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
+
+  const handleViewExamples = (category: string = "Web") => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("SELECT_PORTFOLIO_CATEGORY", { detail: category }));
+      const el = document.getElementById("portofolio");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.location.hash = "portofolio";
+      }
+    }
+    if (onViewExamples) {
+      onViewExamples(category);
+    }
+  };
 
   const { ref, isInView } = useInView({ threshold: 0.1, rootMargin: "0px 0px -50px 0px", triggerOnce: false });
   // Website model toggle: "lepas" (Beli Lepas / Sekali Beli) vs "langganan" (Langganan Hemat)
@@ -486,7 +502,15 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
                     </div>
                   </div>
 
-                  <div className="pt-8">
+                  <div className="pt-6 sm:pt-8 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewExamples("Web")}
+                      className="w-full py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs group/btn hover:scale-[1.01]"
+                    >
+                      <span>Lihat Contoh</span>
+                      <span className="text-xs group-hover/btn:translate-x-0.5 transition-transform">👁️</span>
+                    </button>
                     <button
                       onClick={() =>
                         onSelectPlan(
@@ -608,7 +632,15 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
                     </div>
                   </div>
 
-                  <div className="pt-8">
+                  <div className="pt-6 sm:pt-8 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewExamples("Sosmed")}
+                      className="w-full py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-amber-50/80 hover:bg-amber-100 text-amber-700 border border-amber-200/80 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs group/btn hover:scale-[1.01]"
+                    >
+                      <span>Lihat Contoh</span>
+                      <span className="text-xs group-hover/btn:translate-x-0.5 transition-transform">👁️</span>
+                    </button>
                     <button
                       onClick={() => onSelectPlan(plan.name, "Kelola Sosial Media")}
                       className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm cursor-pointer transition-all ${
@@ -719,7 +751,15 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
                     </div>
                   </div>
 
-                  <div className="pt-8">
+                  <div className="pt-6 sm:pt-8 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewExamples("Ads")}
+                      className="w-full py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-pink-50/80 hover:bg-pink-100 text-pink-700 border border-pink-200/80 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs group/btn hover:scale-[1.01]"
+                    >
+                      <span>Lihat Contoh</span>
+                      <span className="text-xs group-hover/btn:translate-x-0.5 transition-transform">👁️</span>
+                    </button>
                     <button
                       onClick={() => onSelectPlan(plan.name, "Video & Image Ads")}
                       className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm cursor-pointer transition-all ${
@@ -808,7 +848,15 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
                     </div>
                   </div>
 
-                  <div className="pt-8">
+                  <div className="pt-6 sm:pt-8 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewExamples("Ads")}
+                      className="w-full py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-purple-50/80 hover:bg-purple-100 text-purple-700 border border-purple-200/80 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs group/btn hover:scale-[1.01]"
+                    >
+                      <span>Lihat Contoh</span>
+                      <span className="text-xs group-hover/btn:translate-x-0.5 transition-transform">👁️</span>
+                    </button>
                     <button
                       onClick={() => onSelectPlan(item.name, "Jasa Meta Ads")}
                       className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm cursor-pointer transition-all ${
@@ -899,7 +947,15 @@ export default function PricingSection({ onSelectPlan }: PricingSectionProps) {
                     </div>
                   </div>
 
-                  <div className="pt-8">
+                  <div className="pt-6 sm:pt-8 space-y-2.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewExamples("Web")}
+                      className="w-full py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-emerald-50/80 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 cursor-pointer transition-all flex items-center justify-center gap-1.5 shadow-2xs group/btn hover:scale-[1.01]"
+                    >
+                      <span>Lihat Contoh</span>
+                      <span className="text-xs group-hover/btn:translate-x-0.5 transition-transform">👁️</span>
+                    </button>
                     <button
                       onClick={() => onSelectPlan(item.name, "Optimasi SEO")}
                       className={`w-full py-3.5 rounded-xl font-bold text-xs sm:text-sm cursor-pointer transition-all ${

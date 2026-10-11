@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useInView } from "@/hooks/useInView";
 import { useContent } from "@/context/ContentContext";
@@ -15,6 +15,7 @@ interface PortfolioItem {
   image: string;
   rating: number;
   metric: string;
+  liveUrl?: string;
   description: string;
   challenge: string;
   solution: string;
@@ -22,15 +23,35 @@ interface PortfolioItem {
   year: string;
 }
 
-export default function PortfolioSection() {
+interface PortfolioSectionProps {
+  initialFilter?: string;
+}
+
+export default function PortfolioSection({ initialFilter = "Semua" }: PortfolioSectionProps) {
   const { content } = useContent();
   const portData = content?.portfolio;
   const brandName = content?.brand?.name || "lomboXtudio";
   const waNumber = content?.brand?.whatsappNumber;
 
   const { ref, isInView } = useInView({ threshold: 0.1 });
-  const [activeFilter, setActiveFilter] = useState<string>("Semua");
+  const [activeFilter, setActiveFilter] = useState<string>(initialFilter);
   const [selectedProject, setSelectedProject] = useState<PortfolioItem | null>(null);
+
+  useEffect(() => {
+    if (initialFilter) {
+      setActiveFilter(initialFilter);
+    }
+  }, [initialFilter]);
+
+  useEffect(() => {
+    const handleCategoryEvent = (e: any) => {
+      if (e.detail) {
+        setActiveFilter(e.detail);
+      }
+    };
+    window.addEventListener("SELECT_PORTFOLIO_CATEGORY", handleCategoryEvent);
+    return () => window.removeEventListener("SELECT_PORTFOLIO_CATEGORY", handleCategoryEvent);
+  }, []);
 
   const portfolioItems: PortfolioItem[] = [
     {
@@ -306,11 +327,30 @@ export default function PortfolioSection() {
             </div>
 
             <div className="space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
-              <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100">
-                <div className="font-bold text-indigo-900 text-xs uppercase tracking-wider mb-1">
-                  Metrik Utama
+              {/* Tombol Lihat Preview Website (Pengganti Metrik Utama) */}
+              <div className="p-4 sm:p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border border-indigo-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3.5">
+                <div>
+                  <div className="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider">
+                    Live Demo & Preview
+                  </div>
+                  <div className="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5">
+                    Kunjungi & Cek Hasil Proyek
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5">
+                    Buka tampilan live, desain interaktif, dan kecepatan akses website secara langsung.
+                  </p>
                 </div>
-                <div className="text-lg font-extrabold text-indigo-700">{selectedProject.metric}</div>
+                <a
+                  href={selectedProject.liveUrl || (selectedProject.category === "Web" ? "https://www.lomboxtudio.my.id" : "#")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+                >
+                  <span>Lihat Preview</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
               </div>
 
               <div>

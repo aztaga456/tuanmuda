@@ -166,6 +166,7 @@ export interface PortfolioItem {
   image: string;
   rating: number;
   metric: string;
+  liveUrl?: string;
   description: string;
   challenge: string;
   solution: string;
@@ -715,6 +716,7 @@ export const defaultSiteContent: SiteContent = {
         image: "/port-resort.jpg",
         rating: 5,
         metric: "+340% Booking Direct",
+        liveUrl: "https://www.lomboxtudio.my.id",
         description: "Website resort & pemesanan paket wisata terintegrasi multi-bahasa dengan sistem booking instan.",
         challenge: "Tergantung pada komisi tinggi OTA (Online Travel Agent) dan web lama yang lambat diakses di smartphone turis asing.",
         solution: "Redesign dengan Next.js modern, visual fotografi memikat, integrasi payment gateway internasional, dan loading < 1.2 detik.",
@@ -729,6 +731,7 @@ export const defaultSiteContent: SiteContent = {
         image: "/port-coffee.jpg",
         rating: 5,
         metric: "Omset Tumbuh 220%",
+        liveUrl: "https://www.lomboxtudio.my.id",
         description: "Website e-commerce beans kopi lokal Sembalun dengan sistem langganan bulanan pecinta kopi.",
         challenge: "Penjualan biji kopi lokal terbatas pada outlet fisik cafe di Selong dan pasar offline terbatas.",
         solution: "Platform e-commerce D2C dengan katalog roast profile, checkout WhatsApp instan, serta integrasi kurir lokal & nasional.",
@@ -743,6 +746,7 @@ export const defaultSiteContent: SiteContent = {
         image: "/port-packaging.jpg",
         rating: 5,
         metric: "Perceived Value +180%",
+        liveUrl: "https://www.lomboxtudio.my.id",
         description: "Rebranding packaging kemasan botol kaca & dus mewah untuk produk madu hutan premium NTB.",
         challenge: "Kemasan lama memakai botol plastik biasa sehingga sulit menembus pasar oleh-oleh premium dan hotel berbintang.",
         solution: "Desain packaging minimalis dengan sentuhan gold foil, label higienis bersertifikasi, dan visual modern siap ekspor.",
@@ -757,6 +761,7 @@ export const defaultSiteContent: SiteContent = {
         image: "/port-webapp.jpg",
         rating: 5,
         metric: "Pangkas Waktu 70%",
+        liveUrl: "https://www.lomboxtudio.my.id",
         description: "Aplikasi web sederhana untuk manajemen nilai Kurikulum Merdeka, absensi digital, dan e-raport.",
         challenge: "Guru menghabiskan waktu berminggu-minggu dengan puluhan file spreadsheet Excel yang rawan error dan hilang.",
         solution: "Web app responsif yang bisa dibuka di HP dan laptop guru, kalkulasi otomatis nilai formatif/sumatif, dan cetak PDF satu klik.",
@@ -771,6 +776,7 @@ export const defaultSiteContent: SiteContent = {
         image: "/port-coffee.jpg",
         rating: 5,
         metric: "ROAS 5.2x",
+        liveUrl: "https://www.lomboxtudio.my.id",
         description: "Optimasi kampanye iklan Facebook & Instagram bertarget untuk koleksi hari raya lebaran.",
         challenge: "Biaya iklan sebelumnya boncos karena targeting terlalu luas dan materi video tidak memicu hook 3 detik.",
         solution: "Penyusunan video creative 9:16 dengan format review jujur, split testing 6 varian visual, dan retargeting pembeli lama.",
@@ -785,6 +791,7 @@ export const defaultSiteContent: SiteContent = {
         image: "/port-resort.jpg",
         rating: 5,
         metric: "+450% Kunjungan Outlet",
+        liveUrl: "https://www.lomboxtudio.my.id",
         description: "Produksi konten visual makanan estetik & reels video viral yang menggugah selera warga lokal & wisatawan.",
         challenge: "Akun Instagram jarang update dan foto makanan terlihat gelap, sepi interaksi dari calon pembeli.",
         solution: "Fotografi makanan berkonsep segar, penataan feed grid selaras, dan reel food-review yang konsisten tayang 3x seminggu.",
