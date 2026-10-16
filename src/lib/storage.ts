@@ -34,37 +34,26 @@ export async function saveUploadedFile(
   const uniquePrefix = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const filename = `${uniquePrefix}-${baseName}${cleanExt}`;
 
-  // 1. Coba upload langsung ke Cloudinary
-  if (isCloudinaryConfigured()) {
-    try {
-      const cld = await uploadToCloudinary(fileBuffer, {
-        filename,
-        folder: "tuanmuda_agency",
-      });
-      return {
-        filename,
-        originalName: originalFilename,
-        url: cld.url,
-        path: cld.publicId,
-        size: cld.size || fileBuffer.length,
-        mimeType,
-      };
-    } catch (cldErr: any) {
-      console.warn("[Storage] Gagal upload ke Cloudinary, fallback ke Data URL:", cldErr?.message);
-    }
+  // Upload langsung ke Cloudinary
+  try {
+    const cld = await uploadToCloudinary(fileBuffer, {
+      filename,
+      folder: "tuanmuda_agency",
+    });
+    return {
+      filename,
+      originalName: originalFilename,
+      url: cld.url,
+      path: cld.publicId,
+      size: cld.size || fileBuffer.length,
+      mimeType,
+    };
+  } catch (cldErr: any) {
+    console.error("[Storage] Gagal upload ke Cloudinary:", cldErr?.message);
+    throw new Error(
+      `Gagal mengunggah ke Cloudinary CDN: ${cldErr?.message || "Periksa izin API Key Cloudinary"}. Pastikan API Key di Cloudinary Console memiliki izin create/manage assets.`
+    );
   }
-
-  // 2. Fallback: Data URL
-  const dataUrl = `data:${mimeType};base64,${fileBuffer.toString("base64")}`;
-
-  return {
-    filename,
-    originalName: originalFilename,
-    url: dataUrl,
-    path: dataUrl,
-    size: fileBuffer.length,
-    mimeType,
-  };
 }
 
 export async function deleteStoredFile(fileUrlOrPath: string): Promise<boolean> {

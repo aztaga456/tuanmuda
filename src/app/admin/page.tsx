@@ -448,13 +448,23 @@ export default function AdminPage() {
       <header className="bg-[#090C22] border-b border-white/10 sticky top-0 z-40 px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 shadow-lg backdrop-blur-md">
         {/* Brand Info */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-600/30 border border-white/20 shrink-0">
-            {content.brand.emblemText || "LX"}
-          </div>
+          {content.brand.logoImage ? (
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl overflow-hidden flex items-center justify-center p-0.5 shrink-0 bg-white/5 border border-white/10">
+              <img
+                src={getSafeImageUrl(content.brand.logoImage)}
+                alt={content.brand.name || "Logo"}
+                className="w-full h-full object-contain"
+              />
+            </div>
+          ) : (
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white font-black text-xs sm:text-sm shadow-md shadow-indigo-600/30 border border-white/20 shrink-0">
+              {content.brand.emblemText || "LX"}
+            </div>
+          )}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2">
               <span className="font-extrabold text-white text-sm sm:text-base tracking-tight truncate">
-                {content.brand.name || "lomboXtudio"} <span className="text-indigo-400">Admin</span>
+                {content.brand.name || "LomboXstudio"} <span className="text-indigo-400">Admin</span>
               </span>
               <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 sm:px-2 py-0.5 rounded-full font-mono shrink-0 font-bold">
                 CMS

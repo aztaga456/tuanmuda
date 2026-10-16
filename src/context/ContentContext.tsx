@@ -7,12 +7,12 @@ export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined
   if (!parsed || typeof parsed !== "object") return defaultSiteContent;
 
   const brandData = { ...defaultSiteContent.brand, ...(parsed.brand || {}) };
-  if (!brandData.name || brandData.name === "TUANMUDA") {
-    brandData.name = "lomboXtudio";
+  if (!brandData.name || brandData.name === "TUANMUDA" || brandData.name === "lomboXtudio") {
+    brandData.name = "LomboXstudio";
   }
   // Hormati nilai teks logo, jangan timpa jika sengaja dikosongkan (empty string "")
-  if (brandData.logoText1 === undefined || brandData.logoText1 === null || brandData.logoText1 === "TUAN") {
-    brandData.logoText1 = "lomboXtudio";
+  if (brandData.logoText1 === undefined || brandData.logoText1 === null || brandData.logoText1 === "TUAN" || brandData.logoText1 === "lomboXtudio") {
+    brandData.logoText1 = "LomboXstudio";
   }
   if (brandData.logoText2 === undefined || brandData.logoText2 === null || brandData.logoText2 === "MUDA") {
     brandData.logoText2 = "";

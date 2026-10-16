@@ -73,8 +73,17 @@ export async function POST(req: NextRequest) {
           message: "Gambar berhasil diunggah permanen ke Cloudinary CDN!",
         });
       } catch (cldUploadErr: any) {
-        console.error("[Upload API] Gagal upload Cloudinary, fallback:", cldUploadErr);
-        // Lanjutkan ke fallback di bawah jika terjadi error Cloudinary
+        console.error("[Upload API] Gagal upload Cloudinary:", cldUploadErr);
+        const errMsg = cldUploadErr?.message || "Gagal mengunggah ke Cloudinary.";
+        return NextResponse.json(
+          {
+            success: false,
+            error: errMsg.includes("missing permissions")
+              ? "Cloudinary menolak upload: API Key Anda tidak memiliki izin 'create' (Upload Assets). Silakan buka Cloudinary Console > Settings > Access Keys dan centang izin Upload/Manage Assets."
+              : `Gagal upload Cloudinary: ${errMsg}`,
+          },
+          { status: 500 }
+        );
       }
     }
 

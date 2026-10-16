@@ -243,12 +243,12 @@ export interface SiteContent {
 
 export const defaultSiteContent: SiteContent = {
   brand: {
-    name: "lomboXtudio",
-    logoText1: "lomboXtudio",
+    name: "LomboXstudio",
+    logoText1: "LomboXstudio",
     logoText2: "",
     emblemText: "LX",
     subtitle: "DIGITAL SOLUTION",
-    logoImage: "",
+    logoImage: "/logo.png",
     fullLogoImage: "",
     description: "Official studio kreatif & solusi digital di Selong, Lombok Timur. Membantu UMKM, brand lokal, dan instansi tampil profesional dan bertumbuh nyata di era digital.",
     whatsappNumber: "6285955343737",
@@ -265,16 +265,16 @@ export const defaultSiteContent: SiteContent = {
     headlinePrefix2: "",
     headlineGradient: "Layak tampil Hebat",
     rotatingServices: [
-      { service: "Bangun Web", price: "Mulai Rp. 200 Ribu" },
+      { service: "Bangun Web", price: "Mulai Rp. 300 Ribu" },
       { service: "Buat Video Ai", price: "Mulai Rp. 50 Ribu" },
       { service: "Buat Poster", price: "Mulai Rp. 15 Ribu" },
-      { service: "Optimasi SEO", price: "Mulai Rp. 50 Ribu" },
-      { service: "Jasa META Ads", price: "Mulai Rp. 35 Ribu" },
-      { service: "Kelola Sosial Media", price: "Mulai Rp. 500 Ribu" },
+      { service: "Optimasi SEO", price: "Mulai Rp. 249 Ribu" },
+      { service: "Jasa META Ads", price: "Mulai Rp. 65 Ribu" },
+      { service: "Kelola Sosial Media", price: "Mulai Rp. 550 Ribu/bln" },
     ],
     narrative: "Kami mendampingi UMKM, brand lokal, dan institusi di Lombok hingga nasional bertransformasi digital secara nyata. Website cepat berkonversi tinggi, iklan video reels memikat, dan strategi digital yang langsung memicu penjualan.",
     primaryCta: "Konsultasi Gratis Sekarang",
-    secondaryCta: "Lihat Portofolio",
+    secondaryCta: "Pilih Sesuai Kebutuhan",
     metrics: [
       { value: "+240%", label: "Pertumbuhan Klien", desc: "Rata-rata kenaikan omset" },
       { value: "40+", label: "Brand & UMKM", desc: "Telah didampingi go-digital" },

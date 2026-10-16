@@ -1,38 +1,27 @@
 import { v2 as cloudinary } from "cloudinary";
 
 // Inisialisasi konfigurasi Cloudinary
+const cloudName =
+  process.env.CLOUDINARY_CLOUD_NAME ||
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ||
+  "wnfvwyak";
+const apiKey = process.env.CLOUDINARY_API_KEY || "149395829578262";
+const apiSecret = process.env.CLOUDINARY_API_SECRET || "GS-uTzQkfk0VeDEa3HsY9s6VFB0";
+
 cloudinary.config({
-  cloud_name:
-    process.env.CLOUDINARY_CLOUD_NAME ||
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: cloudName,
+  api_key: apiKey,
+  api_secret: apiSecret,
   secure: true,
 });
 
 export { cloudinary };
 
 /**
- * Cek apakah kredensial Cloudinary sudah lengkap di environment variables
+ * Cek apakah kredensial Cloudinary sudah lengkap di environment variables atau fallback
  */
 export function isCloudinaryConfigured(): boolean {
-  if (process.env.CLOUDINARY_URL) {
-    return true;
-  }
-  const cloudName =
-    process.env.CLOUDINARY_CLOUD_NAME ||
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-  return Boolean(
-    cloudName &&
-      cloudName.trim() !== "" &&
-      apiKey &&
-      apiKey.trim() !== "" &&
-      apiSecret &&
-      apiSecret.trim() !== ""
-  );
+  return Boolean(cloudName && apiKey && apiSecret);
 }
 
 /**
