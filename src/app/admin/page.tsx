@@ -76,14 +76,78 @@ export default function AdminPage() {
     }, 3500);
   };
 
+  // Cloudinary Storage Config States
+  const [cloudinaryConfig, setCloudinaryConfig] = useState<{
+    isConfigured: boolean;
+    cloudName: string;
+    apiKeyMasked: string;
+    hasSecret: boolean;
+    driver: string;
+  }>({
+    isConfigured: false,
+    cloudName: "",
+    apiKeyMasked: "",
+    hasSecret: false,
+    driver: "cloudinary",
+  });
+  const [cldCloudName, setCldCloudName] = useState("");
+  const [cldApiKey, setCldApiKey] = useState("");
+  const [cldApiSecret, setCldApiSecret] = useState("");
+  const [cldUrlInput, setCldUrlInput] = useState("");
+  const [isSavingCloudinary, setIsSavingCloudinary] = useState(false);
+
+  const fetchCloudinaryConfig = async () => {
+    try {
+      const res = await fetch("/api/config/cloudinary");
+      const data = await res.json();
+      if (data.success) {
+        setCloudinaryConfig(data);
+        if (data.cloudName) setCldCloudName(data.cloudName);
+      }
+    } catch {}
+  };
+
   // Check existing session & sync from cloud
   useEffect(() => {
     const session = sessionStorage.getItem("tuanmuda_admin_session");
     if (session === "authenticated") {
       setIsAuthenticated(true);
       reloadFromDatabase();
+      fetchCloudinaryConfig();
     }
   }, [reloadFromDatabase]);
+
+  const handleSaveCloudinary = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingCloudinary(true);
+    showToast("Menguji koneksi & menyimpan kredensial Cloudinary...");
+
+    try {
+      const res = await fetch("/api/config/cloudinary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cloudName: cldCloudName,
+          apiKey: cldApiKey,
+          apiSecret: cldApiSecret,
+          cloudinaryUrl: cldUrlInput,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        fetchCloudinaryConfig();
+        setCldApiSecret(""); // Kosongkan secret input demi keamanan
+      } else {
+        alert(data.error || "Gagal menyimpan konfigurasi Cloudinary");
+      }
+    } catch (err: any) {
+      alert("Terjadi kesalahan: " + err.message);
+    } finally {
+      setIsSavingCloudinary(false);
+    }
+  };
 
   const [newPasswordInput, setNewPasswordInput] = useState("");
 
@@ -123,8 +187,8 @@ export default function AdminPage() {
     setIsAuthenticated(false);
   };
 
-  // Memproses file gambar lokal secara instan langsung ke Data URL (Zero Storage dependency)
-  const handleFileUpload = (
+  // Mengunggah file gambar ke Cloudinary CDN via API /api/upload
+  const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     onSuccess: (url: string) => void,
     oldUrl?: string
@@ -132,136 +196,163 @@ export default function AdminPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
-      alert("Ukuran gambar maksimal 15MB.");
+    if (file.size > 20 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 20MB.");
       return;
     }
 
+    if (oldUrl && oldUrl.length > 5) {
+      setReplacedUrls((prev) => Array.from(new Set([...prev, oldUrl])));
+    }
+
     setIsUploading(true);
-    showToast("Memproses file gambar lokal...");
-
-    const reader = new FileReader();
-    reader.onerror = () => {
-      setIsUploading(false);
-      alert("Gagal membaca file dari penyimpanan lokal.");
-    };
-
-    reader.onload = (uploadEvent) => {
-      const rawDataUrl = uploadEvent.target?.result as string;
-      if (!rawDataUrl) {
-        setIsUploading(false);
-        return;
-      }
-
-      // Jika file SVG atau gambar sudah ringan (< 400KB), gunakan langsung
-      if (file.type === "image/svg+xml" || file.size < 400 * 1024) {
-        onSuccess(rawDataUrl);
-        setHasUnsyncedChanges(true);
-        setIsUploading(false);
-        showToast("✅ Gambar lokal berhasil dimuat & siap disimpan!");
-        e.target.value = "";
-        return;
-      }
-
-      // Untuk gambar raster besar, resize proporsional agar ultra ringan (< 150KB) & hemat database
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const maxDim = 1200;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const targetFormat = file.type === "image/png" ? "image/png" : "image/webp";
-            const optimizedDataUrl = canvas.toDataURL(targetFormat, 0.88);
-            onSuccess(optimizedDataUrl);
-          } else {
-            onSuccess(rawDataUrl);
-          }
-        } catch {
-          onSuccess(rawDataUrl);
-        }
-
-        setHasUnsyncedChanges(true);
-        setIsUploading(false);
-        showToast("✅ Gambar lokal berhasil dimuat & siap disimpan!");
-        e.target.value = "";
-      };
-
-      img.onerror = () => {
-        onSuccess(rawDataUrl);
-        setHasUnsyncedChanges(true);
-        setIsUploading(false);
-        showToast("✅ Gambar lokal berhasil dimuat & siap disimpan!");
-        e.target.value = "";
-      };
-
-      img.src = rawDataUrl;
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  // Simpan & Sinkronkan langsung ke Cloud Database dan bersihkan gambar usang di storage
-  const handleSync = async () => {
-    setIsSyncing(true);
-    showToast("Menyimpan ke Database & menyinkronkan data...");
+    showToast("Mengunggah gambar ke Cloudinary CDN...");
 
     try {
-      const res = await syncWithDatabase(replacedUrls);
+      const formData = new FormData();
+      formData.append("file", file);
+      if (oldUrl) {
+        formData.append("oldUrl", oldUrl);
+      }
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        onSuccess(data.url);
+        setHasUnsyncedChanges(true);
+        showToast(
+          data.storage === "cloudinary"
+            ? "✅ Gambar berhasil diunggah permanen ke Cloudinary CDN!"
+            : "✅ Gambar berhasil diproses!"
+        );
+      } else {
+        alert(data.error || "Gagal mengunggah gambar");
+      }
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      alert("Terjadi kesalahan saat mengunggah: " + err.message);
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  // Fungsi pembaruan logo khusus: LANGSUNG menghapus logo sebelumnya di database & storage
+  const handleLogoUpdate = async (
+    newUrl: string,
+    type: "logoImage" | "fullLogoImage"
+  ) => {
+    setIsSyncing(true);
+    showToast(newUrl ? "Menyimpan logo & menghapus logo sebelumnya di database..." : "Menghapus logo dari database & storage...");
+
+    const previousLogo = content.brand[type] || "";
+    const toDelete: string[] = [];
+    if (previousLogo && previousLogo !== newUrl) {
+      toDelete.push(previousLogo);
+    }
+
+    // Jika ganti ke logo lengkap (fullLogoImage), bersihkan juga logoImage agar tidak tertinggal di DB
+    if (type === "fullLogoImage" && newUrl && content.brand.logoImage) {
+      toDelete.push(content.brand.logoImage);
+    }
+    // Jika ganti ke logo icon (logoImage), bersihkan juga fullLogoImage agar tidak tertinggal di DB
+    if (type === "logoImage" && newUrl && content.brand.fullLogoImage) {
+      toDelete.push(content.brand.fullLogoImage);
+    }
+
+    const updatedBrand = {
+      ...content.brand,
+      [type]: newUrl,
+      ...(type === "fullLogoImage" && newUrl ? { logoImage: "" } : {}),
+      ...(type === "logoImage" && newUrl ? { fullLogoImage: "" } : {}),
+    };
+
+    const updatedContent: SiteContent = {
+      ...content,
+      brand: updatedBrand,
+    };
+
+    // 1. Update state React & localStorage seketika
+    updateContent(updatedContent);
+
+    // 2. Langsung simpan ke Neon DB serta hapus logo lama di database & Cloudinary storage
+    try {
+      const res = await syncWithDatabase(toDelete, updatedContent);
       if (res.success) {
         setHasUnsyncedChanges(false);
-        setReplacedUrls([]);
         const now = new Date().toLocaleTimeString("id-ID", {
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
         });
         setLastSyncTime(now);
-        showToast(`✅ ${res.message}`);
+        showToast(
+          newUrl
+            ? "✅ Logo baru tersimpan & logo sebelumnya langsung dihapus dari database & storage!"
+            : "✅ Logo berhasil dihapus dari database & storage!"
+        );
       } else {
-        alert(`Gagal sinkronisasi: ${res.message}`);
+        alert("Gagal menyimpan logo: " + res.message);
       }
     } catch (err: any) {
-      alert(`Terjadi kesalahan: ${err.message}`);
+      alert("Terjadi kesalahan saat menyimpan logo: " + err.message);
     } finally {
       setIsSyncing(false);
     }
   };
 
-  // Backup snapshot database ke Neon & ekspor gambar lokal ke storage
-  const handleBackup = async () => {
+  // Tombol Tunggal: Simpan Konten & Buat Snapshot Backup Neon dalam 1 Kali Klik
+  const handleSaveAndBackup = async () => {
+    setIsSyncing(true);
     setIsBackingUp(true);
-    showToast("Memproses backup database ke Neon & ekspor gambar...");
+    showToast("Menyimpan perubahan & membuat snapshot backup ke Neon Database...");
 
     try {
-      const res = await fetch("/api/backup", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        setBackupStats(data.stats);
-        showToast(`✅ ${data.message}`);
-      } else {
-        alert("Gagal backup: " + (data.error || "Unknown"));
+      // 1. Simpan konten ke Neon PostgreSQL & bersihkan file usang di Cloudinary
+      const res = await syncWithDatabase(replacedUrls);
+      if (!res.success) {
+        alert(`Gagal menyimpan: ${res.message}`);
+        setIsSyncing(false);
+        setIsBackingUp(false);
+        return;
       }
+
+      setHasUnsyncedChanges(false);
+      setReplacedUrls([]);
+      const now = new Date().toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      setLastSyncTime(now);
+
+      // 2. Buat snapshot backup otomatis di Neon DB
+      try {
+        const backupRes = await fetch("/api/backup", { method: "POST" });
+        const backupData = await backupRes.json();
+        if (backupData.success && backupData.stats) {
+          setBackupStats(backupData.stats);
+        }
+      } catch (snapErr) {
+        console.warn("Snapshot backup warning:", snapErr);
+      }
+
+      showToast("✅ Berhasil! Data tersimpan & snapshot backup otomatis dibuat di Neon Cloud Database.");
     } catch (err: any) {
-      alert("Gagal memproses backup: " + err.message);
+      alert(`Terjadi kesalahan saat simpan & backup: ${err.message}`);
     } finally {
+      setIsSyncing(false);
       setIsBackingUp(false);
     }
   };
+
+  // Alias agar kompatibel dengan pemanggil lainnya
+  const handleSync = handleSaveAndBackup;
+  const handleBackup = handleSaveAndBackup;
 
   // ==========================================
   // LOGIN SCREEN
@@ -377,38 +468,37 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Action Header Buttons */}
+        {/* Action Header Buttons: Satu Tombol Simpan & Backup Utama */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* TOMBOL SIMPAN UTAMA (Sangat menonjol & responsif) */}
+          {/* TOMBOL SIMPAN & BACKUP TUNGGAL */}
           <button
             type="button"
-            onClick={handleSync}
-            disabled={isSyncing}
+            onClick={handleSaveAndBackup}
+            disabled={isSyncing || isBackingUp}
             className={`px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all inline-flex items-center gap-2 shadow-lg cursor-pointer ${
-              isSyncing
+              isSyncing || isBackingUp
                 ? "bg-indigo-600/70 text-white cursor-wait border border-indigo-400/40"
                 : hasUnsyncedChanges
                 ? "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 shadow-emerald-500/30 border border-emerald-300 ring-2 ring-emerald-400/40 animate-pulse"
                 : "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 shadow-sm"
             }`}
-            title="Simpan perubahan ke Cloud Database (langsung aktif realtime di HP & semua pengunjung)"
+            title="Simpan perubahan ke Neon PostgreSQL & buat snapshot backup otomatis (1 Klik)"
           >
-            {isSyncing ? (
+            {isSyncing || isBackingUp ? (
               <>
                 <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span className="hidden xs:inline">Menyimpan...</span>
+                <span className="hidden xs:inline">Menyimpan & Backup...</span>
                 <span className="xs:hidden">...</span>
               </>
             ) : hasUnsyncedChanges ? (
               <>
                 <span className="text-sm">💾</span>
-                <span className="font-extrabold">Simpan</span>
-                <span className="hidden sm:inline font-bold">Perubahan</span>
+                <span className="font-extrabold">Simpan & Backup</span>
               </>
             ) : (
               <>
                 <span className="text-emerald-400">✓</span>
-                <span className="font-bold">Tersimpan</span>
+                <span className="font-bold">Tersimpan & Aman</span>
               </>
             )}
           </button>
@@ -438,20 +528,6 @@ export default function AdminPage() {
             <span>👁️</span>
             <span className="hidden md:inline">Website</span>
           </Link>
-
-          {/* Tombol Backup Snapshot */}
-          <button
-            type="button"
-            onClick={handleBackup}
-            disabled={isBackingUp}
-            className={`hidden sm:inline-flex px-2 sm:px-3 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-xs font-semibold text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 transition-colors items-center gap-1.5 cursor-pointer ${
-              isBackingUp ? "opacity-75 cursor-wait" : ""
-            }`}
-            title="Backup snapshot database ke Neon & ekspor aset gambar ke storage"
-          >
-            <span>{isBackingUp ? "⏳" : "📦"}</span>
-            <span className="hidden lg:inline">{isBackingUp ? "Membackup..." : "Backup"}</span>
-          </button>
 
           {/* Tombol Keluar */}
           <button
@@ -666,6 +742,11 @@ export default function AdminPage() {
                             brand: { ...prev.brand, logoImage: e.target.value },
                           }))
                         }
+                        onBlur={(e) => {
+                          if (e.target.value !== (content.brand.logoImage || "")) {
+                            handleLogoUpdate(e.target.value, "logoImage");
+                          }
+                        }}
                         className="admin-input flex-1"
                       />
                       <label className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold cursor-pointer shrink-0 flex items-center justify-center transition-colors">
@@ -677,11 +758,7 @@ export default function AdminPage() {
                           onChange={(e) =>
                             handleFileUpload(
                               e,
-                              (url) =>
-                                updateContent((prev) => ({
-                                  ...prev,
-                                  brand: { ...prev.brand, logoImage: url },
-                                })),
+                              (url) => handleLogoUpdate(url, "logoImage"),
                               content.brand.logoImage
                             )
                           }
@@ -690,14 +767,9 @@ export default function AdminPage() {
                       {content.brand.logoImage && (
                         <button
                           type="button"
-                          onClick={() =>
-                            updateContent((prev) => ({
-                              ...prev,
-                              brand: { ...prev.brand, logoImage: "" },
-                            }))
-                          }
+                          onClick={() => handleLogoUpdate("", "logoImage")}
                           className="px-2 py-1 bg-red-500/20 text-red-300 hover:bg-red-500/40 rounded-xl text-xs"
-                          title="Hapus gambar icon"
+                          title="Hapus gambar icon (langsung dihapus dari database & storage)"
                         >
                           ✕
                         </button>
@@ -721,6 +793,11 @@ export default function AdminPage() {
                             brand: { ...prev.brand, fullLogoImage: e.target.value },
                           }))
                         }
+                        onBlur={(e) => {
+                          if (e.target.value !== (content.brand.fullLogoImage || "")) {
+                            handleLogoUpdate(e.target.value, "fullLogoImage");
+                          }
+                        }}
                         className="admin-input flex-1"
                       />
                       <label className="px-3 py-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white rounded-xl text-xs font-semibold cursor-pointer shrink-0 flex items-center justify-center transition-colors shadow-md shadow-pink-600/20">
@@ -732,11 +809,7 @@ export default function AdminPage() {
                           onChange={(e) =>
                             handleFileUpload(
                               e,
-                              (url) =>
-                                updateContent((prev) => ({
-                                  ...prev,
-                                  brand: { ...prev.brand, fullLogoImage: url },
-                                })),
+                              (url) => handleLogoUpdate(url, "fullLogoImage"),
                               content.brand.fullLogoImage
                             )
                           }
@@ -745,14 +818,9 @@ export default function AdminPage() {
                       {content.brand.fullLogoImage && (
                         <button
                           type="button"
-                          onClick={() =>
-                            updateContent((prev) => ({
-                              ...prev,
-                              brand: { ...prev.brand, fullLogoImage: "" },
-                            }))
-                          }
+                          onClick={() => handleLogoUpdate("", "fullLogoImage")}
                           className="px-2 py-1 bg-red-500/20 text-red-300 hover:bg-red-500/40 rounded-xl text-xs"
-                          title="Hapus logo lengkap (kembali ke mode teks + icon)"
+                          title="Hapus logo lengkap (langsung dihapus dari database & storage)"
                         >
                           ✕
                         </button>
@@ -4123,30 +4191,21 @@ export default function AdminPage() {
               <div className="border-b border-white/10 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <span>📦</span> Sinkronisasi Cloud, Backup & Ekspor Data
+                    <span>📦</span> Penyimpanan Cloud, Backup & Ekspor Data
                   </h2>
                   <p className="text-xs text-slate-400 mt-1">
-                    Kelola sinkronisasi langsung ke Neon PostgreSQL dan ImgBB Cloud Storage.
+                    Kelola penyimpanan tunggal ke Neon PostgreSQL dan Cloudinary CDN Storage.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleSync}
-                    disabled={isSyncing}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-600/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    onClick={handleSaveAndBackup}
+                    disabled={isSyncing || isBackingUp}
+                    className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition-all shadow-lg shadow-emerald-600/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <span>{isSyncing ? "⏳" : "⚡"}</span>
-                    <span>{isSyncing ? "Menyinkronkan..." : "Sinkronkan Sekarang"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleBackup}
-                    disabled={isBackingUp}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-600/25 flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <span>{isBackingUp ? "⏳" : "💾"}</span>
-                    <span>{isBackingUp ? "Membackup..." : "Buat Snapshot Backup"}</span>
+                    <span>{isSyncing || isBackingUp ? "⏳" : "⚡"}</span>
+                    <span>{isSyncing || isBackingUp ? "Menyimpan & Membackup..." : "Simpan & Buat Snapshot Backup"}</span>
                   </button>
                 </div>
               </div>
@@ -4160,7 +4219,7 @@ export default function AdminPage() {
                   </div>
                   <div>
                     <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      Database Cloud
+                      Database Cloud (Single DB)
                     </div>
                     <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -4171,16 +4230,25 @@ export default function AdminPage() {
 
                 {/* Status Storage */}
                 <div className="bg-[#090C22] border border-white/10 rounded-2xl p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 text-lg">
-                    📁
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 text-lg">
+                    ☁️
                   </div>
                   <div>
                     <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
                       Media Storage
                     </div>
                     <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      ImgBB Cloud Storage (Aktif & Realtime)
+                      {cloudinaryConfig.isConfigured ? (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                          Cloudinary CDN ({cloudinaryConfig.cloudName || "Aktif"})
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          Cloudinary (Isi Kredensial di Bawah / .env)
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -4209,6 +4277,99 @@ export default function AdminPage() {
                 </div>
               </div>
 
+              {/* Cloudinary Storage API Configuration Card */}
+              <div className="bg-[#090C22] border border-sky-500/25 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl shadow-sky-950/20">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-white/10 pb-4">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-2xl">☁️</span>
+                      <h3 className="font-bold text-white text-base">
+                        Konfigurasi Cloudinary Storage API
+                      </h3>
+                      {cloudinaryConfig.isConfigured ? (
+                        <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full text-[10px] font-bold flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          CDN Cloudinary Aktif
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-[10px] font-bold">
+                          ⚠️ Belum Terhubung (Masukkan Kredensial)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Cloudinary menyimpan seluruh gambar website di CDN permanen dan otomatis menghapus gambar lama secara fisik saat diganti (anti-revert & anti-lag).
+                    </p>
+                  </div>
+                  <a
+                    href="https://cloudinary.com/console"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1 underline underline-offset-2 shrink-0 bg-sky-500/10 px-3 py-1.5 rounded-xl border border-sky-500/20"
+                  >
+                    Buka Dashboard Cloudinary ↗
+                  </a>
+                </div>
+
+                <form onSubmit={handleSaveCloudinary} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">
+                        Cloud Name <span className="text-sky-400 font-mono text-[10px]">(CLOUDINARY_CLOUD_NAME)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="contoh: dxyz123abc"
+                        value={cldCloudName}
+                        onChange={(e) => setCldCloudName(e.target.value)}
+                        className="admin-input w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">
+                        API Key <span className="text-sky-400 font-mono text-[10px]">(CLOUDINARY_API_KEY)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={cloudinaryConfig.apiKeyMasked || "contoh: 123456789012345"}
+                        value={cldApiKey}
+                        onChange={(e) => setCldApiKey(e.target.value)}
+                        className="admin-input w-full"
+                        required={!cloudinaryConfig.apiKeyMasked}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1">
+                        API Secret <span className="text-sky-400 font-mono text-[10px]">(CLOUDINARY_API_SECRET)</span>
+                      </label>
+                      <input
+                        type="password"
+                        placeholder={cloudinaryConfig.hasSecret ? "•••••••••••••••• (Tersimpan)" : "Paste API Secret Anda"}
+                        value={cldApiSecret}
+                        onChange={(e) => setCldApiSecret(e.target.value)}
+                        className="admin-input w-full"
+                        required={!cloudinaryConfig.hasSecret}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-white/5">
+                    <p className="text-[11px] text-slate-400">
+                      💡 Kredensial ini otomatis disimpan permanen ke file <code className="text-sky-300 bg-white/5 px-1.5 py-0.5 rounded font-mono">.env</code>. Anda juga dapat mengeditnya langsung di file <code className="text-sky-300 bg-white/5 px-1.5 py-0.5 rounded font-mono">.env</code> di root proyek.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={isSavingCloudinary}
+                      className="px-5 py-2.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      <span>{isSavingCloudinary ? "⏳" : "💾"}</span>
+                      <span>{isSavingCloudinary ? "Menguji & Menyimpan..." : "Simpan & Uji Koneksi Cloudinary"}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
               {/* Notice Garbage Collection */}
               {replacedUrls.length > 0 && (
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 flex items-center justify-between">
@@ -4231,41 +4392,26 @@ export default function AdminPage() {
 
               {/* Action Cards Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Simpan & Sinkronkan Card */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 flex flex-col justify-between space-y-4">
+                {/* Kartu Tunggal: Simpan & Buat Snapshot Backup Neon */}
+                <div className="bg-gradient-to-br from-emerald-950/40 via-teal-950/20 to-indigo-950/40 border border-emerald-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4 md:col-span-2 shadow-xl shadow-emerald-950/20">
                   <div>
-                    <div className="text-2xl mb-2">⚡</div>
-                    <h3 className="font-bold text-white text-sm">Simpan & Sinkronkan</h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Update konten langsung ke Cloud DB dan bersihkan otomatis gambar usang di storage.
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">⚡</span>
+                      <span className="text-2xl">📦</span>
+                    </div>
+                    <h3 className="font-bold text-white text-base">Simpan & Buat Snapshot Backup</h3>
+                    <p className="text-xs text-slate-300 mt-1">
+                      Simpan seluruh konten website ke Neon PostgreSQL, buat snapshot backup pemulihan permanen, dan bersihkan file gambar usang di Cloudinary dalam satu kali klik.
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={handleSync}
-                    disabled={isSyncing}
-                    className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50"
+                    onClick={handleSaveAndBackup}
+                    disabled={isSyncing || isBackingUp}
+                    className="w-full py-3 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white rounded-xl text-xs font-black transition-all cursor-pointer shadow-lg shadow-emerald-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {isSyncing ? "Menyinkronkan..." : "Sinkronkan ke Cloud"}
-                  </button>
-                </div>
-
-                {/* Snapshot Backup Neon & Storage Card */}
-                <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 flex flex-col justify-between space-y-4">
-                  <div>
-                    <div className="text-2xl mb-2">📦</div>
-                    <h3 className="font-bold text-white text-sm">Snapshot Backup Neon</h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Buat titik pemulihan permanen di Neon Database & arsipkan data terbaru.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleBackup}
-                    disabled={isBackingUp}
-                    className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md disabled:opacity-50"
-                  >
-                    {isBackingUp ? "Memproses Backup..." : "Ekspor & Buat Snapshot"}
+                    <span>{isSyncing || isBackingUp ? "⏳" : "⚡"}</span>
+                    <span>{isSyncing || isBackingUp ? "Menyimpan & Membackup..." : "Simpan & Buat Snapshot Sekarang"}</span>
                   </button>
                 </div>
 

@@ -41,6 +41,11 @@ export function getSafeImageUrl(url?: string | null): string {
     return url;
   }
 
+  // Cloudinary CDN URLs (res.cloudinary.com) sangat cepat, aman, dan didukung global
+  if (url.includes("cloudinary.com")) {
+    return url;
+  }
+
   // File statis bawaan public
   if (
     url.startsWith("/svg/") ||
@@ -58,9 +63,9 @@ export function getSafeImageUrl(url?: string | null): string {
     return `/api/media?id=${gdriveId}`;
   }
 
-  // Jika URL ImgBB (i.ibb.co / imgbb.com), gunakan proxy /api/media agar tidak diblokir ISP Indonesia
-  if (url.includes("ibb.co") || url.includes("imgbb.com")) {
-    return `/api/media?url=${encodeURIComponent(url)}`;
+  // Jika URL Cloudinary atau remote HTTPS lainnya, langsung gunakan URL aslinya (CDN super cepat)
+  if (url.startsWith("https://res.cloudinary.com") || url.startsWith("https://")) {
+    return url;
   }
 
   // Jika file lokal uploads

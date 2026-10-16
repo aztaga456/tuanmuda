@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { SiteContent, defaultSiteContent } from "@/data/defaultSiteContent";
-import { isFirebaseConfigured, subscribeToFirebaseContent } from "@/lib/firebase";
 
 export function mergeWithDefault(parsed: Partial<SiteContent> | null | undefined): SiteContent {
   if (!parsed || typeof parsed !== "object") return defaultSiteContent;
@@ -173,10 +172,15 @@ export function ContentProvider({
   children: React.ReactNode;
   initialContent?: SiteContent;
 }) {
-  // Ambil state awal secepat mungkin:
-  // Di browser, prioritaskan cache localStorage seketika (Zero Latency Instant Hydration, 0ms delay).
-  // Di server SSR, gunakan initialContent atau defaultSiteContent.
+  // Ambil state awal:
+  // Prioritas 1: Jika initialContent dari server (SSR langsung dari Neon DB) tersedia,
+  // MAKA ITU ADALAH PRIORITAS UTAMA!
+  // Ini menjamin saat website dibuka / di-refresh, browser langsung menampilkan data terbaru dari server
+  // tanpa berkedip menampilkan logo lama dari cache localStorage!
   const [content, setContent] = useState<SiteContent>(() => {
+    if (initialContent) {
+      return mergeWithDefault(initialContent);
+    }
     if (typeof window !== "undefined") {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -188,7 +192,7 @@ export function ContentProvider({
         }
       } catch {}
     }
-    return initialContent ? mergeWithDefault(initialContent) : defaultSiteContent;
+    return defaultSiteContent;
   });
   const [isLoaded, setIsLoaded] = useState(true);
 
@@ -230,50 +234,30 @@ export function ContentProvider({
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Cek cache localStorage seketika saat browser mount
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") {
-          setContent(mergeWithDefault(parsed));
-          setIsLoaded(true);
-        }
-      }
-    } catch {}
-
-    // 2. Jika initialContent dari server memiliki kustomisasi gambar/logo, terapkan
-    if (
-      initialContent &&
-      (initialContent.brand?.logoImage ||
-        initialContent.brand?.fullLogoImage ||
-        initialContent.brand?.name !== "TUANMUDA")
-    ) {
+    // 1. Jika ada initialContent dari server SSR, sinkronkan langsung ke localStorage browser!
+    // Ini memastikan cache browser selalu memuat data terbaru dari server, bukan data lama.
+    if (initialContent) {
       const mergedServer = mergeWithDefault(initialContent);
       setContent(mergedServer);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedServer));
       } catch {}
       setIsLoaded(true);
-    }
-
-    // 2. Real-time Listener ke Firebase Firestore
-    // Bila admin mengubah data di PC / HP, semua layar lain langsung update secara realtime!
-    let unsubscribeFirebase: (() => void) | null = null;
-    if (isFirebaseConfigured()) {
+    } else {
+      // Fallback jika tanpa SSR: baca localStorage
       try {
-        unsubscribeFirebase = subscribeToFirebaseContent((newContent) => {
-          if (isMounted && newContent) {
-            setContent(newContent);
-            saveToStorage(newContent);
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && typeof parsed === "object") {
+            setContent(mergeWithDefault(parsed));
           }
-        });
-      } catch (fbErr) {
-        console.warn("Firebase realtime subscription notice:", fbErr);
-      }
+        }
+      } catch {}
+      setIsLoaded(true);
     }
 
-    // 3. Ambil data terbaru dari server (Neon DB / API) jika Firebase belum aktif
+    // 2. Ambil data terbaru dari server (Neon PostgreSQL Database)
     const initFetch = async () => {
       try {
         const res = await fetch("/api/content", {
@@ -329,9 +313,6 @@ export function ContentProvider({
     window.addEventListener("storage", handleStorageChange);
     return () => {
       isMounted = false;
-      if (unsubscribeFirebase) {
-        unsubscribeFirebase();
-      }
       if (broadcastChannel) {
         try {
           broadcastChannel.close();

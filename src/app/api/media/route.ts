@@ -99,10 +99,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. Dukungan Remote URL (ImgBB, Cloudflare CDN, dll.)
-    // Berfungsi sebagai proxy agar tidak terkena blokir ISP / Handshake Failure di Indonesia
+    // 2. Dukungan Remote URL (Cloudinary, Remote CDN, dll.)
+    // Berfungsi sebagai proxy caching lokal untuk optimasi kecepatan
     if (target.startsWith("http://") || target.startsWith("https://")) {
-      const isRemoteCdn = target.includes("ibb.co") || target.includes("imgbb") || !target.includes("google");
+      const isRemoteCdn = !target.includes("google");
       if (isRemoteCdn) {
         const cached = memoryCache.get(target);
         if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {

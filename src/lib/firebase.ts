@@ -35,45 +35,16 @@ const firebaseConfig = {
 };
 
 /**
- * Memeriksa apakah kredensial Firebase sudah terkonfigurasi di environment variables
+ * Firebase telah dinonaktifkan sesuai permintaan pengguna (Single Database: Neon PostgreSQL).
  */
 export function isFirebaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
-    (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL)
-  );
+  return false;
 }
 
-// Inisialisasi Firebase singleton yang aman di client maupun server
+// Singleton Firebase dinonaktifkan (Single Database Neon PostgreSQL)
 let firebaseApp: FirebaseApp | null = null;
 let firestoreDb: Firestore | null = null;
 let realtimeDb: Database | null = null;
-
-if (typeof window !== "undefined" || isFirebaseConfigured()) {
-  try {
-    if (isFirebaseConfigured()) {
-      firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-      
-      // Inisialisasi Realtime Database jika databaseURL ada
-      if (firebaseConfig.databaseURL) {
-        try {
-          realtimeDb = getDatabase(firebaseApp, firebaseConfig.databaseURL);
-        } catch (rtdbInitErr) {
-          console.warn("[Firebase] RTDB init notice:", rtdbInitErr);
-        }
-      }
-
-      // Inisialisasi Firestore Database
-      try {
-        firestoreDb = getFirestore(firebaseApp);
-      } catch (fsInitErr) {
-        console.warn("[Firebase] Firestore init notice:", fsInitErr);
-      }
-    }
-  } catch (err) {
-    console.warn("[Firebase] Inisialisasi Firebase dilewati:", err);
-  }
-}
 
 export { firebaseApp, firestoreDb, realtimeDb };
 
@@ -129,8 +100,35 @@ export async function getFirebaseContent(): Promise<SiteContent | null> {
 export async function saveFirebaseContent(content: SiteContent): Promise<boolean> {
   let savedAny = false;
 
-  // 1. Simpan ke Realtime Database
-  if (realtimeDb) {
+  // 1. Simpan ke Firebase Realtime Database via Direct REST API (Ultra cepat < 150ms, anti-hang di Node server)
+  const rtdbBaseUrl =
+    process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL ||
+    (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+      ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.asia-southeast1.firebasedatabase.app`
+      : undefined);
+
+  if (rtdbBaseUrl) {
+    try {
+      const restEndpoint = `${rtdbBaseUrl.replace(/\/$/, "")}/${RTDB_CONTENT_PATH}.json`;
+      const res = await fetch(restEndpoint, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content,
+          updatedAt: Date.now(),
+          lastSync: new Date().toISOString(),
+        }),
+      });
+      if (res.ok) {
+        savedAny = true;
+      }
+    } catch (restErr: any) {
+      console.warn("[Firebase] RTDB REST save notice:", restErr?.message);
+    }
+  }
+
+  // 2. Simpan juga melalui Realtime Database SDK jika aktif
+  if (realtimeDb && !savedAny) {
     try {
       await rtdbSet(rtdbRef(realtimeDb, RTDB_CONTENT_PATH), {
         content,
@@ -139,11 +137,11 @@ export async function saveFirebaseContent(content: SiteContent): Promise<boolean
       });
       savedAny = true;
     } catch (rtdbErr: any) {
-      console.warn("[Firebase] RTDB save warning:", rtdbErr.message);
+      console.warn("[Firebase] RTDB SDK save warning:", rtdbErr?.message);
     }
   }
 
-  // 2. Simpan ke Firestore
+  // 3. Simpan ke Firestore (non-blocking)
   if (firestoreDb) {
     try {
       const docRef = doc(firestoreDb, CONTENT_COLLECTION, CONTENT_DOC);
@@ -158,7 +156,7 @@ export async function saveFirebaseContent(content: SiteContent): Promise<boolean
       );
       savedAny = true;
     } catch (fsErr: any) {
-      console.warn("[Firebase] Firestore save warning:", fsErr.message);
+      // Non-blocking Firestore notice
     }
   }
 
